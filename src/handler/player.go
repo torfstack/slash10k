@@ -7,7 +7,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
 	"scurvy10k/sql/db"
-	"scurvy10k/src/config"
 	"scurvy10k/src/utils"
 )
 
@@ -17,7 +16,7 @@ func AddPlayer(c echo.Context) error {
 		return c.String(400, "Name is required!")
 	}
 
-	conn, err := utils.GetConnection(config.NewConfig())
+	conn, err := utils.GetConnection(utils.DefaultConfig())
 	if err != nil {
 		return c.String(500, "Could not get db connection!")
 	}

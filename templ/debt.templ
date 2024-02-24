@@ -3,10 +3,72 @@ package frontend
 import "scurvy10k/src/models"
 
 templ Debt(debts []models.PlayerDebt) {
-    <h1>Debts</h1>
-    for _, debt := range debts {
+    @Setup(DebtsView(debts))
+}
+
+templ DebtsView(debts []models.PlayerDebt) {
+    <div class="container-lg flex justify-center">
         <div>
-            {debt.Name} {debt.Amount}
+            <h1 class="mb-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white">10k in die Gildenbank!</h1>
+            <p class="mb-6 text-lg font-normal text-gray-500 lg:text-xl sm:px-16 xl:px-48 dark:text-gray-400">Du Lappen..</p>
+            <div class="relative overflow-x-auto">
+                <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                Spieler
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                In die Gildenbank
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Mehr
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Weniger
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        for _, debt := range debts {
+                            @DebtView(debt)
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
-    }
+    </div>
+}
+
+templ DebtView(debt models.PlayerDebt) {
+    <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+        <td scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+            {debt.Name}
+        </td>
+        <td class="px-6 py-4">
+            {debt.Amount}
+        </td>
+        <td class="px-6 py-4">
+            <button class="bg-red-500 hover:bg-red-800 text-white font-bold py-2 px-4 rounded">+ 10k</button>
+        </td>
+        <td class="px-6 py-4">
+            <button class="bg-green-500 hover:bg-green-800 text-white font-bold py-2 px-4 rounded">- 10k</button>
+        </td>
+    </tr>
+}
+
+templ Setup(contents templ.Component) {
+    <!DOCTYPE html>
+    <html>
+        <head>
+            <meta charset="utf-8"/>
+            <meta name="viewport" content="width=device-width, initial-scale=1"/>
+            <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" origin="anonymous"/>
+            <title>10k in die Gildenbank!</title>
+        </head>
+        <body>
+            @contents
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"/>
+        </body>
+    </html>
 }

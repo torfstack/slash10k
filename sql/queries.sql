@@ -9,6 +9,12 @@ INSERT INTO debt (
     $1, $2
 ) RETURNING *;
 
+-- name: UpdateDebt :one
+UPDATE debt
+SET amount = $1
+WHERE user_id = $2
+RETURNING *;
+
 -- name: AddDebtJournalEntry :one
 INSERT INTO debt_journal (
     amount, description, user_id

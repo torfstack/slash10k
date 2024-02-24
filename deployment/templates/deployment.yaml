@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.appName }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.appName }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.appName }}
+    spec:
+      containers:
+        - name: {{ .Values.appName }}
+          image: {{ .Values.image.name }}:{{ .Values.image.tag }}
+          ports:
+            - containerPort: 3000
+              hostPort: {{ .Values.port }}
+          env:
+            - name: DATABASE_CONNECTION_HOST
+              value: {{ .Values.database.host }}
+            - name: DATABASE_CONNECTION_PORT
+              value: {{ quote .Values.database.port }}
+            - name: DATABASE_CONNECTION_DBNAME
+              value: {{ .Values.database.dbname }}
+            - name: DATABASE_CONNECTION_USER
+              value: {{ .Values.database.user }}
+            - name: DATABASE_CONNECTION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: scurvy10k
+                  key: db-password
+      imagePullSecrets:
+        - name: regcred
+  strategy:
+    type: Recreate

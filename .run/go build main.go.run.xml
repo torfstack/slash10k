@@ -6,6 +6,8 @@
     <package value="scurvy10k" />
     <directory value="$PROJECT_DIR$" />
     <filePath value="$PROJECT_DIR$/src/main.go" />
-    <method v="2" />
+    <method v="2">
+      <option name="ToolBeforeRunTask" enabled="true" actionId="Tool_External Tools_templ" />
+    </method>
   </configuration>
 </component>

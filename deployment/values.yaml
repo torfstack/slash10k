@@ -1,0 +1,13 @@
+appName: "scurvy10k"
+namespace: "default"
+port: 3330
+
+database:
+  host: "torfstack.de"
+  port: 5432
+  user: "postgres"
+  dbname: "scurvy10k"
+
+image:
+  name: ghcr.io/torfstack/scurvy10k
+  tag: 0.0.2

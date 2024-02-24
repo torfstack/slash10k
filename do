@@ -1,12 +1,19 @@
 #! /bin/bash
 
 build() {
+  check_installed "go"
+
   gen
   CGO_ENABLED=0 GOOS=linux go build -o bin/scurvy10k-backend src/main.go
-  docker buildx build . -t scurvy10k-backend
+  version=$(cat version)
+  echo "Building scurvy10k-backend:$version"
+  docker buildx build . -t ghcr.io/torfstack/scurvy10k:"$version"
+  docker push ghcr.io/torfstack/scurvy10k:"$version"
 }
 
 gen() {
+  check_installed "templ"
+
   echo "Generating templ..."
   templ generate
   echo "Generating sql..."
@@ -24,9 +31,6 @@ clean() {
 }
 
 start() {
-  check_installed "templ"
-  check_installed "go"
-
   case "$1" in
     build)
       build
@@ -37,11 +41,20 @@ start() {
     clean)
       clean
       ;;
+    deploy)
+      deploy
+      ;;
     *)
-      echo "Usage: do [build|clean|gen]"
+      echo "Usage: do [build|clean|deploy|gen]"
       exit 1
       ;;
   esac
+}
+
+deploy() {
+  check_installed "helm"
+  echo "Deploying..."
+  helm upgrade --install scurvy10k deployment --values deployment/values.yaml -f deployment/values.yaml -n default
 }
 
 check_installed() {

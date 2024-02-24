@@ -9,7 +9,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"scurvy10k/sql/db"
-	"scurvy10k/src/config"
 	"scurvy10k/src/utils"
 	"strconv"
 )
@@ -57,7 +56,7 @@ func nameAndAmount(c echo.Context) (string, int64, error) {
 }
 
 func addDebtToPlayer(name string, amount int64, c echo.Context) error {
-	conn, err := utils.GetConnection(config.NewConfig())
+	conn, err := utils.GetConnection(utils.DefaultConfig())
 	if err != nil {
 		_ = c.String(500, "Could not get db connection!")
 		return err
@@ -82,12 +81,17 @@ func addDebtToPlayer(name string, amount int64, c echo.Context) error {
 		_ = c.String(400, "Could not get player debt!")
 		return err
 	}
-	_, err = q.SetDebt(context.Background(), db.SetDebtParams{
+	_, err = q.UpdateDebt(context.Background(), db.UpdateDebtParams{
 		Amount: currentDebt.Amount + amount,
 		UserID: pgtype.Int4{
 			Int32: pId,
 			Valid: true,
 		},
 	})
+	if err != nil {
+		log.Error().Msgf("could not set debt for player %s(id:%v): %s", name, pId, err)
+		_ = c.String(400, "Could not set player debt!")
+		return err
+	}
 	return nil
 }

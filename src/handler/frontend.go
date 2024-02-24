@@ -5,7 +5,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"scurvy10k/sql/db"
-	"scurvy10k/src/config"
 	"scurvy10k/src/models"
 	"scurvy10k/src/utils"
 	frontend "scurvy10k/templ"
@@ -13,7 +12,7 @@ import (
 )
 
 func ServeFrontend(c echo.Context) error {
-	conn, err := utils.GetConnection(config.NewConfig())
+	conn, err := utils.GetConnection(utils.DefaultConfig())
 	if err != nil {
 		return c.String(500, "Could not get db connection!")
 	}
