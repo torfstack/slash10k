@@ -1,16 +1,26 @@
 #! /bin/bash
 
 build() {
-  templ generate
+  gen
   CGO_ENABLED=0 GOOS=linux go build -o bin/scurvy10k-backend src/main.go
   docker buildx build . -t scurvy10k-backend
 }
 
+gen() {
+  echo "Generating templ..."
+  templ generate
+  echo "Generating sql..."
+  sqlc generate
+}
+
 clean() {
   echo "Cleaning up..."
-  echo "Removing bin/ and templ/.go"
+  echo "templ/.go"
   rm templ/*.go &> /dev/null
+  echo "bin"
   rm -r bin &> /dev/null
+  echo "sqlc"
+  rm -r sql/db &> /dev/null
 }
 
 start() {
@@ -21,11 +31,14 @@ start() {
     build)
       build
       ;;
+    gen)
+      gen
+      ;;
     clean)
       clean
       ;;
     *)
-      echo "Usage: do [build|clean]"
+      echo "Usage: do [build|clean|gen]"
       exit 1
       ;;
   esac

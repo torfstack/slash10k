@@ -6,19 +6,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/time/rate"
-	"io"
 	"os"
 	"scurvy10k/src/handler"
-	"text/template"
 )
-
-type Template struct {
-	templates *template.Template
-}
-
-func (t *Template) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
-	return t.templates.ExecuteTemplate(w, name, data)
-}
 
 func main() {
 	setupLogger()
@@ -33,15 +23,17 @@ func main() {
 
 	log.Debug().Msg("setting up routes")
 
-	t := &Template{
-		templates: template.Must(template.ParseGlob("templ/*.html")),
-	}
-	e.Renderer = t
-
 	e.GET("/", handler.ServeFrontend)
 
 	api := e.Group("/api")
-	api.GET("/debt", handler.Debt)
+	api.GET("/debt/:player", handler.GetDebt)
+	api.POST("/debt/:player/:amount", handler.AddDebt)
+
+	admin := api.Group("/admin")
+	admin.POST("/player/:name", handler.AddPlayer)
+	admin.DELETE("/player/:name", handler.DeletePlayer)
+	admin.POST("/char", handler.AddChar)
+	admin.DELETE("/char/:name", handler.DeleteChar)
 
 	log.Info().Msgf("server started on port %v", 3000)
 	e.Logger.Fatal(e.Start(":3000"))

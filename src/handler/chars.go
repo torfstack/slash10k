@@ -1,15 +1,13 @@
 package handler
 
-import "net/http"
+import (
+	"github.com/labstack/echo/v4"
+)
 
-func AddChar(w http.ResponseWriter, r *http.Request) {
-
+func AddChar(c echo.Context) error {
+	return nil
 }
 
-func GetChar(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func DeleteChar(w http.ResponseWriter, r *http.Request) {
-
+func DeleteChar(c echo.Context) error {
+	return nil
 }

@@ -1,0 +1,38 @@
+package handler
+
+import (
+	"context"
+	"fmt"
+	"github.com/jackc/pgx/v5"
+	"github.com/labstack/echo/v4"
+	"scurvy10k/sql/db"
+	"scurvy10k/src/config"
+	"scurvy10k/src/utils"
+)
+
+func AddPlayer(c echo.Context) error {
+	name := c.Param("name")
+	if name == "" {
+		return c.String(400, "Name is required!")
+	}
+
+	conn, err := utils.GetConnection(config.NewConfig())
+	if err != nil {
+		return c.String(500, "Could not get db connection!")
+	}
+	defer func(conn *pgx.Conn, ctx context.Context) {
+		_ = conn.Close(ctx)
+	}(conn, context.Background())
+
+	q := db.New(conn)
+	p, err := q.AddPlayer(context.Background(), name)
+	if err != nil {
+		return c.String(500, "Could not add player!")
+	}
+
+	return c.String(200, fmt.Sprintf("added player %v", p))
+}
+
+func DeletePlayer(c echo.Context) error {
+	return c.String(200, "DeletePlayer!")
+}
