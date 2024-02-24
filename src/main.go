@@ -42,5 +42,6 @@ func main() {
 func setupLogger() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	output := zerolog.ConsoleWriter{Out: os.Stderr}
+	log.Logger = log.Output(output)
 }

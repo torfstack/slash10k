@@ -1,6 +1,12 @@
 package frontend
 
-templ Debt(player, amount string) {
-    <h1>Debt</h1>
-    <div>{ player } owes { amount }</div>
+import "scurvy10k/src/models"
+
+templ Debt(debts []models.PlayerDebt) {
+    <h1>Debts</h1>
+    for _, debt := range debts {
+        <div>
+            {debt.Name} {debt.Amount}
+        </div>
+    }
 }

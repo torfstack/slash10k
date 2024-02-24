@@ -2,10 +2,11 @@ package handler
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog/log"
 	"scurvy10k/sql/db"
 	"scurvy10k/src/config"
+	"scurvy10k/src/models"
 	"scurvy10k/src/utils"
 	frontend "scurvy10k/templ"
 	"strconv"
@@ -17,19 +18,24 @@ func ServeFrontend(c echo.Context) error {
 		return c.String(500, "Could not get db connection!")
 	}
 	q := db.New(conn)
-	sId, err := q.GetIdOfPlayer(context.Background(), "scurvy")
-	if err != nil {
-		return c.String(500, "Could not get player id!")
-	}
-	d, err := q.GetDebt(context.Background(), pgtype.Int4{
-		Int32: sId,
-		Valid: true,
-	})
+	debts, err := q.AllPlayerDebts(context.Background())
 	if err != nil {
 		return c.String(500, "Could not get debt!")
 	}
+	log.Debug().Msgf("retrieved %v debts", len(debts))
 
 	return frontend.
-		Debt("scurvy", strconv.FormatInt(d.Amount, 10)).
+		Debt(transformDebt(debts)).
 		Render(context.Background(), c.Response())
+}
+
+func transformDebt(debts []db.AllPlayerDebtsRow) []models.PlayerDebt {
+	var transformed []models.PlayerDebt
+	for _, d := range debts {
+		transformed = append(transformed, models.PlayerDebt{
+			Name:   d.Name,
+			Amount: strconv.FormatInt(d.Amount, 10),
+		})
+	}
+	return transformed
 }

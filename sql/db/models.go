@@ -16,6 +16,12 @@ type Char struct {
 }
 
 type Debt struct {
+	ID     int32
+	Amount int64
+	UserID pgtype.Int4
+}
+
+type DebtJournal struct {
 	ID          int32
 	Amount      int64
 	Description string

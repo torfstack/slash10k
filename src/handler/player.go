@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
 	"scurvy10k/sql/db"
 	"scurvy10k/src/config"
@@ -28,6 +29,16 @@ func AddPlayer(c echo.Context) error {
 	p, err := q.AddPlayer(context.Background(), name)
 	if err != nil {
 		return c.String(500, "Could not add player!")
+	}
+	_, err = q.SetDebt(context.Background(), db.SetDebtParams{
+		Amount: 0,
+		UserID: pgtype.Int4{
+			Int32: p.ID,
+			Valid: true,
+		},
+	})
+	if err != nil {
+		return c.String(500, "Could not add zero debt to player!")
 	}
 
 	return c.String(200, fmt.Sprintf("added player %v", p))

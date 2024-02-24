@@ -11,23 +11,23 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const addDebt = `-- name: AddDebt :one
-INSERT INTO debts (
+const addDebtJournalEntry = `-- name: AddDebtJournalEntry :one
+INSERT INTO debt_journal (
     amount, description, user_id
 ) VALUES (
     $1, $2, $3
 ) RETURNING id, amount, description, date, user_id
 `
 
-type AddDebtParams struct {
+type AddDebtJournalEntryParams struct {
 	Amount      int64
 	Description string
 	UserID      pgtype.Int4
 }
 
-func (q *Queries) AddDebt(ctx context.Context, arg AddDebtParams) (Debt, error) {
-	row := q.db.QueryRow(ctx, addDebt, arg.Amount, arg.Description, arg.UserID)
-	var i Debt
+func (q *Queries) AddDebtJournalEntry(ctx context.Context, arg AddDebtJournalEntryParams) (DebtJournal, error) {
+	row := q.db.QueryRow(ctx, addDebtJournalEntry, arg.Amount, arg.Description, arg.UserID)
+	var i DebtJournal
 	err := row.Scan(
 		&i.ID,
 		&i.Amount,
@@ -39,7 +39,7 @@ func (q *Queries) AddDebt(ctx context.Context, arg AddDebtParams) (Debt, error) 
 }
 
 const addPlayer = `-- name: AddPlayer :one
-INSERT INTO players (
+INSERT INTO player (
     name
 ) VALUES (
     $1
@@ -53,26 +53,59 @@ func (q *Queries) AddPlayer(ctx context.Context, name string) (Player, error) {
 	return i, err
 }
 
+const allPlayerDebts = `-- name: AllPlayerDebts :many
+SELECT p.id, name, d.id, amount, user_id FROM player p
+JOIN debt d ON p.id = d.user_id
+`
+
+type AllPlayerDebtsRow struct {
+	ID     int32
+	Name   string
+	ID_2   int32
+	Amount int64
+	UserID pgtype.Int4
+}
+
+func (q *Queries) AllPlayerDebts(ctx context.Context) ([]AllPlayerDebtsRow, error) {
+	rows, err := q.db.Query(ctx, allPlayerDebts)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []AllPlayerDebtsRow
+	for rows.Next() {
+		var i AllPlayerDebtsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.ID_2,
+			&i.Amount,
+			&i.UserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getDebt = `-- name: GetDebt :one
-SELECT id, amount, description, date, user_id FROM debts
+SELECT id, amount, user_id FROM debt
 WHERE user_id = $1 LIMIT 1
 `
 
 func (q *Queries) GetDebt(ctx context.Context, userID pgtype.Int4) (Debt, error) {
 	row := q.db.QueryRow(ctx, getDebt, userID)
 	var i Debt
-	err := row.Scan(
-		&i.ID,
-		&i.Amount,
-		&i.Description,
-		&i.Date,
-		&i.UserID,
-	)
+	err := row.Scan(&i.ID, &i.Amount, &i.UserID)
 	return i, err
 }
 
 const getIdOfPlayer = `-- name: GetIdOfPlayer :one
-SELECT id FROM players
+SELECT id FROM player
 WHERE name = $1 LIMIT 1
 `
 
@@ -81,4 +114,24 @@ func (q *Queries) GetIdOfPlayer(ctx context.Context, name string) (int32, error)
 	var id int32
 	err := row.Scan(&id)
 	return id, err
+}
+
+const setDebt = `-- name: SetDebt :one
+INSERT INTO debt (
+    amount, user_id
+) VALUES (
+    $1, $2
+) RETURNING id, amount, user_id
+`
+
+type SetDebtParams struct {
+	Amount int64
+	UserID pgtype.Int4
+}
+
+func (q *Queries) SetDebt(ctx context.Context, arg SetDebtParams) (Debt, error) {
+	row := q.db.QueryRow(ctx, setDebt, arg.Amount, arg.UserID)
+	var i Debt
+	err := row.Scan(&i.ID, &i.Amount, &i.UserID)
+	return i, err
 }
