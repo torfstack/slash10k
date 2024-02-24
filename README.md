@@ -2,7 +2,7 @@
 Make your WoW mates pay their debts! 
 
 ## Uses
-- [Templ](https://github.com/a-h/templ)
+- [Templ](https://github.com/a-h/templ)
 - [sqlc](https://github.com/sqlc-dev/sqlc)
 
 ## Build
