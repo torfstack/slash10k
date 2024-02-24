@@ -1,10 +1,11 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="go build scurvy10k" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
+  <configuration default="false" name="go build main.go" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
     <module name="scurvy10k" />
     <working_directory value="$PROJECT_DIR$" />
     <kind value="FILE" />
+    <package value="scurvy10k" />
     <directory value="$PROJECT_DIR$" />
-    <filePath value="$PROJECT_DIR$/backend/src/main.go" />
+    <filePath value="$PROJECT_DIR$/src/main.go" />
     <method v="2" />
   </configuration>
 </component>

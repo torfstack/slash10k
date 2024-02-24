@@ -1,0 +1,9 @@
+package frontend
+
+type From struct {
+	Value string
+}
+
+templ HelloWorld(value From) {
+    <div>Hello, { value.Value }!</div>
+}
