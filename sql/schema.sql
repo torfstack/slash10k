@@ -16,6 +16,7 @@ CREATE TABLE debt
 (
     id SERIAL PRIMARY KEY,
     amount BIGINT NOT NULL,
+    last_updated TIMESTAMP NOT NULL DEFAULT now(),
     user_id INTEGER UNIQUE REFERENCES player(id) ON DELETE CASCADE
 );
 

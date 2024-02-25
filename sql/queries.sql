@@ -11,7 +11,7 @@ INSERT INTO debt (
 
 -- name: UpdateDebt :one
 UPDATE debt
-SET amount = $1
+SET amount = $1, last_updated = now()
 WHERE user_id = $2
 RETURNING *;
 
