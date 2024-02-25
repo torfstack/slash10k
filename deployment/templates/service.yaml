@@ -9,6 +9,7 @@ spec:
   ports:
     - port: {{ .Values.port }}
       protocol: TCP
+      name: http
       targetPort: 3000
   selector:
     app: {{ .Values.appName }}
