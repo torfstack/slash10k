@@ -2,6 +2,9 @@ FROM alpine:3.19.1
 
 RUN mkdir /opt/scurvy10k
 
-COPY bin/scurvy10k-backend /opt/scurvy10k/scurvy10k-backend
+WORKDIR /opt/scurvy10k
 
-CMD ["./opt/scurvy10k/scurvy10k-backend"]
+COPY bin/scurvy10k-backend scurvy10k-backend
+COPY assets assets
+
+CMD ["./scurvy10k-backend"]

@@ -20,6 +20,7 @@ spec:
           image: {{ .Values.image.name }}:{{ .Values.image.tag }}
           ports:
             - containerPort: 3000
+              hostPort: 3330
           env:
             - name: DATABASE_CONNECTION_HOST
               value: {{ .Values.database.host }}

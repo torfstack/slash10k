@@ -24,6 +24,7 @@ func main() {
 	log.Debug().Msg("setting up routes")
 
 	e.GET("/", handler.ServeFrontend)
+	e.Static("/", "assets")
 
 	api := e.Group("/api")
 	api.GET("/debt/:player", handler.GetDebt)
