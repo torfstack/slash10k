@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"scurvy10k/sql/db"
+	"scurvy10k/src/utils"
+	"strconv"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
-	"scurvy10k/sql/db"
-	"scurvy10k/src/utils"
-	"strconv"
 )
 
 func GetDebt(c echo.Context) error {

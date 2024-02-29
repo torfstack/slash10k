@@ -1,13 +1,14 @@
 package main
 
 import (
+	"os"
+	"scurvy10k/src/handler"
+
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/time/rate"
-	"os"
-	"scurvy10k/src/handler"
 )
 
 func main() {

@@ -3,9 +3,9 @@ namespace: "default"
 port: 3330
 
 database:
-  host: "torfstack.de"
+  host: "postgresql.default.svc.cluster.local"
   port: 5432
-  user: "postgres"
+  user: "scurvy10k"
   dbname: "scurvy10k"
 
 image:
