@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="go build main.go" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
+  <configuration default="false" name="NO_ADMIN_PW" type="GoApplicationRunConfiguration" factoryName="Go Application">
     <module name="scurvy10k" />
     <working_directory value="$PROJECT_DIR$" />
     <go_parameters value="-ldflags &quot;-X main.adminPw=disabled&quot;" />
