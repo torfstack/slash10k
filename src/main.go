@@ -42,8 +42,8 @@ func main() {
 			log.Fatal().Msg("ADMIN_PASSWORD not set")
 			return
 		}
-		admin.Use(middleware.BasicAuth(func(s string, s2 string, context echo.Context) (bool, error) {
-			return s == "admin" && s2 == pw, nil
+		admin.Use(middleware.BasicAuth(func(user, pass string, context echo.Context) (bool, error) {
+			return user == "admin" && pass == pw, nil
 		}))
 	}
 
