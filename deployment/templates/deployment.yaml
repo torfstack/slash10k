@@ -35,6 +35,11 @@ spec:
                 secretKeyRef:
                   name: scurvy10k
                   key: db-password
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: scurvy10k
+                  key: admin-password
       imagePullSecrets:
         - name: regcred
   strategy:

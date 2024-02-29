@@ -32,6 +32,15 @@ func main() {
 	api.POST("/debt/:player/:amount", handler.AddDebt)
 
 	admin := api.Group("/admin")
+
+	if adminPw == "disabled" {
+		log.Warn().Msg("admin password is disabled")
+		pw := os.Getenv("ADMIN_PW")
+		admin.Use(middleware.BasicAuth(func(s string, s2 string, context echo.Context) (bool, error) {
+			return s == "admin" && s2 == pw, nil
+		}))
+	}
+
 	admin.POST("/player/:name", handler.AddPlayer)
 	admin.DELETE("/player/:name", handler.DeletePlayer)
 	admin.POST("/char", handler.AddChar)
@@ -47,3 +56,6 @@ func setupLogger() {
 	output := zerolog.ConsoleWriter{Out: os.Stderr}
 	log.Logger = log.Output(output)
 }
+
+// go build -ldflags "-X main.adminPwDisabled=disabled" -o scurvy10k
+var adminPw string
