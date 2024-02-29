@@ -35,6 +35,8 @@ func main() {
 
 	if adminPw == "disabled" {
 		log.Warn().Msg("admin password is disabled")
+	} else {
+		log.Debug().Msg("admin password is enabled")
 		pw := os.Getenv("ADMIN_PW")
 		admin.Use(middleware.BasicAuth(func(s string, s2 string, context echo.Context) (bool, error) {
 			return s == "admin" && s2 == pw, nil
