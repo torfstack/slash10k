@@ -49,13 +49,14 @@ templ DebtView(debt models.PlayerDebt) {
             {debt.Amount}
         </td>
         <td class="px-6 py-4">
-            <button class="ripple bg-red-500 hover:bg-red-800 text-white font-bold py-2 px-4 rounded">+10k</button>
+            <button onclick={ addDebt(debt.Name) } class="ripple bg-red-500 hover:bg-red-800 text-white font-bold py-2 px-4 rounded">+10k</button>
         </td>
         <td class="px-6 py-4">
-            <button class="ripple bg-green-500 hover:bg-green-800 text-white font-bold py-2 px-4 rounded">-10k</button>
+            <button onclick={ subDebt(debt.Name) } class="ripple bg-green-500 hover:bg-green-800 text-white font-bold py-2 px-4 rounded">-10k</button>
         </td>
     </tr>
 }
+
 
 templ Setup(contents templ.Component) {
     <!DOCTYPE html>
@@ -72,4 +73,33 @@ templ Setup(contents templ.Component) {
             <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"/>
         </body>
     </html>
+}
+
+script addDebt(name string) {
+    console.log(name);
+    fetch(`/api/debt/${name}/10000`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({name: name})
+    }).then(response => {
+        if (response.ok) {
+            location.reload();
+        }
+    });
+}
+
+script subDebt(name string) {
+    console.log(name);
+    fetch(`/api/debt/${name}/-10000`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+    }).then(response => {
+        if (response.ok) {
+            location.reload();
+        }
+    });
 }
