@@ -49,10 +49,10 @@ templ DebtView(debt models.PlayerDebt) {
             {debt.Amount}
         </td>
         <td class="px-6 py-4">
-            <button class="bg-red-500 hover:bg-red-800 text-white font-bold py-2 px-4 rounded">+ 10k</button>
+            <button class="ripple bg-red-500 hover:bg-red-800 text-white font-bold py-2 px-4 rounded">+ 10k</button>
         </td>
         <td class="px-6 py-4">
-            <button class="bg-green-500 hover:bg-green-800 text-white font-bold py-2 px-4 rounded">- 10k</button>
+            <button class="ripple bg-green-500 hover:bg-green-800 text-white font-bold py-2 px-4 rounded">- 10k</button>
         </td>
     </tr>
 }
@@ -64,6 +64,7 @@ templ Setup(contents templ.Component) {
             <meta charset="utf-8"/>
             <meta name="viewport" content="width=device-width, initial-scale=1"/>
             <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" origin="anonymous"/>
+            <link href="/css/app.css" rel="stylesheet" origin="anonymous"/>
             <title>10k in die Gildenbank!</title>
         </head>
         <body>
