@@ -28,6 +28,7 @@ func main() {
 	e.Static("/", "assets")
 
 	api := e.Group("/api")
+	api.GET("/debt", handler.AllDebts)
 	api.GET("/debt/:player", handler.GetDebt)
 	api.POST("/debt/:player/:amount", handler.AddDebt)
 

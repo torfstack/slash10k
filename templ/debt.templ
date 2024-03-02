@@ -1,12 +1,15 @@
 package frontend
 
-import "scurvy10k/src/models"
+import (
+    "scurvy10k/src/models"
+    "fmt"
+)
 
-templ Debt(debts []models.PlayerDebt) {
-    @Setup(DebtsView(debts))
+templ Debt() {
+    @Setup(DebtsView())
 }
 
-templ DebtsView(debts []models.PlayerDebt) {
+templ DebtsView() {
     <div class="flex justify-center">
         <div>
             <h1 class="pt-5 text-center mb-4 text-4xl font-extrabold leading-none tracking-tight text-gray-900 md:text-5xl lg:text-6xl dark:text-white">10k in die Gildenbank!</h1>
@@ -29,10 +32,8 @@ templ DebtsView(debts []models.PlayerDebt) {
                             </th>
                         </tr>
                     </thead>
-                    <tbody>
-                        for _, debt := range debts {
-                            @DebtView(debt)
-                        }
+                    <tbody id="players" hx-target="this" hx-swap="innerHTML" hx-get="/api/debt" hx-trigger="load"
+                        hx-headers='{"Accept": "text/html"}'>
                     </tbody>
                 </table>
             </div>
@@ -49,14 +50,15 @@ templ DebtView(debt models.PlayerDebt) {
             {debt.Amount}
         </td>
         <td class="px-6 py-4">
-            <button onclick={ addDebt(debt.Name) } class="ripple bg-red-500 hover:bg-red-800 text-white font-bold py-2 px-4 rounded">+10k</button>
+            <button hx-trigger="click" hx-post={ fmt.Sprintf("/api/debt/%s/10000", debt.Name) } hx-swap="innerHTML" hx-target="#players"
+                class="ripple bg-red-500 hover:bg-red-800 text-white font-bold py-2 px-4 rounded">+10k</button>
         </td>
         <td class="px-6 py-4">
-            <button onclick={ subDebt(debt.Name) } class="ripple bg-green-500 hover:bg-green-800 text-white font-bold py-2 px-4 rounded">-10k</button>
+            <button hx-trigger="click" hx-post={ fmt.Sprintf("/api/debt/%s/-10000", debt.Name) } hx-swap="innerHTML" hx-target="#players"
+                class="ripple bg-green-500 hover:bg-green-800 text-white font-bold py-2 px-4 rounded">-10k</button>
         </td>
     </tr>
 }
-
 
 templ Setup(contents templ.Component) {
     <!DOCTYPE html>
@@ -67,39 +69,11 @@ templ Setup(contents templ.Component) {
             <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" origin="anonymous"/>
             <link href="/css/app.css" rel="stylesheet" origin="anonymous"/>
             <title>10k in die Gildenbank!</title>
+            <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
         </head>
         <body>
             @contents
             <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"/>
         </body>
     </html>
-}
-
-script addDebt(name string) {
-    console.log(name);
-    fetch(`/api/debt/${name}/10000`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({name: name})
-    }).then(response => {
-        if (response.ok) {
-            location.reload();
-        }
-    });
-}
-
-script subDebt(name string) {
-    console.log(name);
-    fetch(`/api/debt/${name}/-10000`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-    }).then(response => {
-        if (response.ok) {
-            location.reload();
-        }
-    });
 }

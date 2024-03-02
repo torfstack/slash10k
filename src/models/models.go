@@ -1,6 +1,10 @@
 package models
 
 type PlayerDebt struct {
-	Name   string
-	Amount string
+	Name   string `json:"name"`
+	Amount string `json:"amount"`
+}
+
+type AllDebtsResponse struct {
+	Debts []PlayerDebt `json:"debts"`
 }

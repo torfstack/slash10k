@@ -4,9 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"scurvy10k/sql/db"
+	"scurvy10k/src/models"
 	"scurvy10k/src/utils"
+	frontend "scurvy10k/templ"
 	"strconv"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -23,18 +27,74 @@ var (
 	ErrAmountNotSpecified = errors.New("amount is required")
 )
 
-func AddDebt(c echo.Context) error {
-	name, amount, err := nameAndAmount(c)
-	if err != nil {
-		return err
+func AllDebts(c echo.Context) error {
+	if c.Request().Header.Get("Accept") == "text/html" {
+		s, err := allDebtsHtml()
+		if err != nil {
+			return err
+		}
+		return c.HTML(http.StatusOK, s)
+	} else {
+		debts, err := allDebtsJson()
+		if err != nil {
+			return err
+		}
+		return c.JSON(http.StatusOK, debts)
 	}
 
-	err = addDebtToPlayer(name, amount, c)
+	return nil
+}
+
+func allDebtsHtml() (string, error) {
+	debts, err := allDebts()
 	if err != nil {
-		return err
+		return "", err
+	}
+	ctx := context.Background()
+
+	b := strings.Builder{}
+	for _, d := range debts {
+		err = frontend.DebtView(d).Render(ctx, &b)
+		if err != nil {
+			return "", err
+		}
 	}
 
-	return c.String(200, fmt.Sprintf("added debt %v to player %s", amount, name))
+	return b.String(), nil
+}
+
+func allDebtsJson() (*models.AllDebtsResponse, error) {
+	debts, err := allDebts()
+	if err != nil {
+		return nil, err
+	}
+	return &models.AllDebtsResponse{
+		Debts: debts,
+	}, nil
+}
+
+func allDebts() ([]models.PlayerDebt, error) {
+	conn, err := utils.GetConnection(utils.DefaultConfig())
+	if err != nil {
+		return nil, err
+	}
+	q := db.New(conn)
+	dbDebts, err := q.AllPlayerDebts(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	var debts []models.PlayerDebt
+	for _, debtRow := range dbDebts {
+		debts = append(debts, playerDebtFromDb(debtRow))
+	}
+	return debts, nil
+}
+
+func playerDebtFromDb(debtRow db.AllPlayerDebtsRow) models.PlayerDebt {
+	return models.PlayerDebt{
+		Name:   debtRow.Name,
+		Amount: fmt.Sprint(debtRow.Amount),
+	}
 }
 
 func nameAndAmount(c echo.Context) (string, int64, error) {
@@ -54,6 +114,20 @@ func nameAndAmount(c echo.Context) (string, int64, error) {
 		return "", 0, c.String(400, "Amount must be an integer!")
 	}
 	return name, a, nil
+}
+
+func AddDebt(c echo.Context) error {
+	name, amount, err := nameAndAmount(c)
+	if err != nil {
+		return err
+	}
+
+	err = addDebtToPlayer(name, amount, c)
+	if err != nil {
+		return err
+	}
+
+	return AllDebts(c)
 }
 
 func addDebtToPlayer(name string, amount int64, c echo.Context) error {
