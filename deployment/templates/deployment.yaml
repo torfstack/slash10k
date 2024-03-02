@@ -40,6 +40,8 @@ spec:
                 secretKeyRef:
                   name: scurvy10k
                   key: admin-password
+            - name: LOG_LEVEL
+              value: {{ .Values.logLevel }}
       imagePullSecrets:
         - name: regcred
   strategy:

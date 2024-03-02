@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"scurvy10k/src/handler"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -59,7 +60,17 @@ func main() {
 
 func setupLogger() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	logLevel := os.Getenv("LOG_LEVEL")
+	if logLevel != "" {
+		l, err := zerolog.ParseLevel(strings.ToLower(logLevel))
+		if err != nil {
+			zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		} else {
+			zerolog.SetGlobalLevel(l)
+		}
+	} else {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
 	output := zerolog.ConsoleWriter{Out: os.Stderr}
 	log.Logger = log.Output(output)
 }

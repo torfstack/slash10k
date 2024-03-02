@@ -1,6 +1,7 @@
 appName: "scurvy10k"
 namespace: "default"
 port: 3330
+logLevel: "info"
 
 database:
   host: "postgresql.default.svc.cluster.local"
@@ -10,4 +11,4 @@ database:
 
 image:
   name: ghcr.io/torfstack/scurvy10k
-  tag: 0.0.18
+  tag: 0.0.19
