@@ -11,4 +11,4 @@ database:
 
 image:
   name: ghcr.io/torfstack/scurvy10k
-  tag: 0.0.20
+  tag: 0.0.21
