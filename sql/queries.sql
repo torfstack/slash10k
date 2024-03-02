@@ -32,7 +32,7 @@ INSERT INTO player (
 -- name: AllPlayerDebts :many
 SELECT * FROM player p
 JOIN debt d ON p.id = d.user_id
-ORDER BY d.amount DESC;
+ORDER BY d.amount DESC, upper(p.name);
 
 -- name: GetIdOfPlayer :one
 SELECT id FROM player
