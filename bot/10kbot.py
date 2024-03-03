@@ -21,6 +21,9 @@ intents.message_content = True
 
 client = commands.Bot(command_prefix='!', description="10k in die Gildenbank", intents=intents)
 token = os.getenv('DISCORD_TOKEN')
+if token is None:
+    print("No token found")
+    exit(1)
 
 @client.event
 async def on_ready():

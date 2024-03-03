@@ -15,4 +15,4 @@ image:
 
 botImage:
   name: ghcr.io/torfstack/10kbot
-  tag: 0.0.3
+  tag: 0.0.4
