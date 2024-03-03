@@ -42,6 +42,14 @@ spec:
                   key: admin-password
             - name: LOG_LEVEL
               value: {{ .Values.logLevel }}
+        - name: {{ .Values.appName }}-bot
+          image: {{ .Values.botImage.name }}:{{ .Values.botImage.tag }}
+          env:
+            - name: DISCORD_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: scurvy10k
+                  key: discord-token
       imagePullSecrets:
         - name: regcred
   strategy:

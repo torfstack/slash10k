@@ -12,3 +12,7 @@ database:
 image:
   name: ghcr.io/torfstack/scurvy10k
   tag: 0.0.21
+
+botImage:
+  name: ghcr.io/torfstack/10kbot
+  tag: 0.0.3

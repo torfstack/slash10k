@@ -1,0 +1,4 @@
+#! /bin/bash
+
+docker buildx build . -t ghcr.io/torfstack/10kbot:0.0.3
+docker push ghcr.io/torfstack/10kbot:0.0.3
