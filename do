@@ -4,11 +4,24 @@ build() {
   check_installed "go"
 
   gen
-  CGO_ENABLED=0 GOOS=linux go build -o bin/scurvy10k-backend src/main.go
+  build_server
+  build_bot
+}
+
+build_server() {
+  CGO_ENABLED=0 GOOS=linux go build -o bin/scurvy10k-server cmd/server/main.go
   version=$(cat version)
-  echo "Building scurvy10k-backend:$version"
-  docker buildx build . -t ghcr.io/torfstack/scurvy10k:"$version"
+  echo "Building scurvy10k:$version"
+  docker buildx build . -f Dockerfile -t ghcr.io/torfstack/scurvy10k:"$version"
   docker push ghcr.io/torfstack/scurvy10k:"$version"
+}
+
+build_bot() {
+  CGO_ENABLED=0 GOOS=linux go build -o bin/scurvy10k-bot cmd/bot/main.go
+  version=$(cat version)
+  echo "Building scurvy10k-bot:$version"
+  docker buildx build . -f Dockerfile-bot -t ghcr.io/torfstack/scurvy10k-bot:"$version"
+  docker push ghcr.io/torfstack/scurvy10k-bot:"$version"
 }
 
 gen() {

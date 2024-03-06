@@ -1,0 +1,9 @@
+FROM alpine:3.19.1
+
+RUN mkdir /opt/scurvy10k-bot
+
+WORKDIR /opt/scurvy10k-bot
+
+COPY /bin/scurvy10k-bot scurvy10k-bot
+
+CMD ["./scurvy10k-bot"]
