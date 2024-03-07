@@ -29,6 +29,9 @@ INSERT INTO player (
     $1
 ) RETURNING *;
 
+-- name: NumberOfPlayers :one
+SELECT COUNT(*) FROM player;
+
 -- name: AllPlayerDebts :many
 SELECT * FROM player p
 JOIN debt d ON p.id = d.user_id

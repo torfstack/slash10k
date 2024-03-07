@@ -25,6 +25,15 @@ func AddPlayer(c echo.Context) error {
 	}(conn, context.Background())
 
 	q := db.New(conn)
+
+	count, err := q.NumberOfPlayers(context.Background())
+	if err != nil {
+		return c.String(500, "Could not get number of players!")
+	}
+	if count >= 100 {
+		return c.String(400, "Max number of players reached!")
+	}
+
 	p, err := q.AddPlayer(context.Background(), name)
 	if err != nil {
 		return c.String(500, "Could not add player!")
