@@ -1,4 +1,2 @@
 .idea
 bin
-templ/*.go
-sql/db
