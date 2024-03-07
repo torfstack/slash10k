@@ -27,8 +27,8 @@ var commands = []api.CreateCommandData{
 	}},
 }
 
-var baseUrl string = "https://true.torfstack.com/"
-var debtsUrl string = baseUrl + "api/debt"
+var baseUrl = "https://true.torfstack.com/"
+var debtsUrl = baseUrl + "api/debt"
 
 func main() {
 	setupLogger()

@@ -41,8 +41,6 @@ func AllDebts(c echo.Context) error {
 		}
 		return c.JSON(http.StatusOK, debts)
 	}
-
-	return nil
 }
 
 func allDebtsHtml() (string, error) {
@@ -156,10 +154,15 @@ func addDebtToPlayer(name string, amount int64, c echo.Context) error {
 		_ = c.String(400, "Could not get player debt!")
 		return err
 	}
+
 	newAmount := currentDebt.Amount + amount
 	if newAmount < 0 {
 		_ = c.String(400, "Debt cannot be negative!")
 		return errors.New("debt cannot be negative")
+	}
+	if newAmount > 1_000_000 {
+		_ = c.String(400, "Debt cannot be more than 1_000_000")
+		return errors.New("debt cannot be more than 1_000_000")
 	}
 	_, err = q.UpdateDebt(context.Background(), db.UpdateDebtParams{
 		Amount: currentDebt.Amount + amount,
