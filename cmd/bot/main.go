@@ -25,10 +25,15 @@ var commands = []api.CreateCommandData{
 		&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
 		&discord.StringOption{OptionName: "amount", Description: "Betrag, kann negativ sein", Required: true},
 	}},
+	{Name: "10kup", Description: "Setup 10k-bot, create channel '10k-bot'", Options: discord.CommandOptions{
+		&discord.ChannelOption{OptionName: "channel_id", Description: "Channel, in dem der Bot aktiv sein soll", Required: true},
+	}},
 }
 
 var baseUrl = "https://true.torfstack.com/"
 var debtsUrl = baseUrl + "api/debt"
+
+var messageId discord.MessageID
 
 func main() {
 	setupLogger()
@@ -36,27 +41,11 @@ func main() {
 	r := cmdroute.NewRouter()
 
 	r.AddFunc("10ks", func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
-		res, err := http.Get(debtsUrl)
+		debts, err := getDebts()
 		if err != nil {
-			log.Error().Msgf("cannot get debts: %s", err)
 			return &api.InteractionResponseData{Content: option.NewNullableString("Error: " + err.Error())}
 		}
-		defer res.Body.Close()
-		bytes, err := io.ReadAll(res.Body)
-		if err != nil {
-			log.Error().Msgf("cannot read body: %s", err)
-			return &api.InteractionResponseData{Content: option.NewNullableString("Error: " + err.Error())}
-		}
-		var debts models.AllDebtsResponse
-		if err = json.Unmarshal(bytes, &debts); err != nil {
-			log.Error().Msgf("cannot unmarshal debts: %s", err)
-			return &api.InteractionResponseData{Content: option.NewNullableString("Error: " + err.Error())}
-		}
-		b := strings.Builder{}
-		for _, d := range debts.Debts {
-			b.WriteString(d.Name + ": " + d.Amount + "\n")
-		}
-		return &api.InteractionResponseData{Content: option.NewNullableString(b.String())}
+		return &api.InteractionResponseData{Content: option.NewNullableString(debts)}
 	})
 
 	r.AddFunc("10k", func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
@@ -81,6 +70,28 @@ func main() {
 	s.AddInteractionHandler(r)
 	s.AddIntents(gateway.IntentGuilds)
 	s.AddIntents(gateway.IntentMessageContent)
+
+	r.AddFunc("10kup", func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+		options := data.Options
+		channelOption := options.Find("channel_id")
+		i, err := channelOption.SnowflakeValue()
+		if err != nil {
+			return &api.InteractionResponseData{Content: option.NewNullableString("Error: " + err.Error())}
+		}
+		channelID := discord.ChannelID(i)
+
+		debts, err := getDebts()
+		if err != nil {
+			return &api.InteractionResponseData{Content: option.NewNullableString("Error: " + err.Error())}
+		}
+		m, err := s.SendMessage(channelID, debts)
+		if err != nil {
+			return &api.InteractionResponseData{Content: option.NewNullableString("Error: " + err.Error())}
+		}
+		messageId = m.ID
+
+		return &api.InteractionResponseData{Content: option.NewNullableString("Erfolgreich!")}
+	})
 
 	if err := cmdroute.OverwriteCommands(s, commands); err != nil {
 		log.Fatal().Msgf("cannot update commands: %s", err)
@@ -107,4 +118,26 @@ func setupLogger() {
 	}
 	output := zerolog.ConsoleWriter{Out: os.Stderr}
 	log.Logger = log.Output(output)
+}
+
+func getDebts() (string, error) {
+	res, err := http.Get(debtsUrl)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+	bytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return "", err
+	}
+	var debts models.AllDebtsResponse
+	if err = json.Unmarshal(bytes, &debts); err != nil {
+		log.Error().Msgf("cannot unmarshal debts: %s", err)
+		return "", err
+	}
+	b := strings.Builder{}
+	for _, d := range debts.Debts {
+		b.WriteString(d.Name + ": " + d.Amount + "\n")
+	}
+	return b.String(), nil
 }
