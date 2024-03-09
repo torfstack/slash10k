@@ -165,7 +165,7 @@ func transformDebtsToEmbed(debts *models.AllDebtsResponse) *discord.Embed {
 		Timestamp:   discord.NowTimestamp(),
 		Color:       discord.DefaultEmbedColor,
 		Footer: &discord.EmbedFooter{
-			Text: "add features <a href=\"https://github.com/torfstack/scurvy10k\">https://github.com/torfstack/scurvy10k</a>",
+			Text: "https://github.com/torfstack/scurvy10k",
 			Icon: "https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png",
 		},
 		Fields: fields,
