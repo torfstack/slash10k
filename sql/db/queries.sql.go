@@ -95,6 +95,18 @@ func (q *Queries) AllPlayerDebts(ctx context.Context) ([]AllPlayerDebtsRow, erro
 	return items, nil
 }
 
+const getBotSetup = `-- name: GetBotSetup :one
+SELECT channel_id, message_id, created_at FROM bot_setup
+WHERE created_at = (SELECT MAX(created_at) FROM bot_setup) LIMIT 1
+`
+
+func (q *Queries) GetBotSetup(ctx context.Context) (BotSetup, error) {
+	row := q.db.QueryRow(ctx, getBotSetup)
+	var i BotSetup
+	err := row.Scan(&i.ChannelID, &i.MessageID, &i.CreatedAt)
+	return i, err
+}
+
 const getDebt = `-- name: GetDebt :one
 SELECT id, amount, last_updated, user_id FROM debt
 WHERE user_id = $1 LIMIT 1
@@ -133,6 +145,26 @@ func (q *Queries) NumberOfPlayers(ctx context.Context) (int64, error) {
 	var count int64
 	err := row.Scan(&count)
 	return count, err
+}
+
+const putBotSetup = `-- name: PutBotSetup :one
+INSERT INTO bot_setup (
+    channel_id, message_id
+) VALUES (
+    $1, $2
+) RETURNING channel_id, message_id, created_at
+`
+
+type PutBotSetupParams struct {
+	ChannelID string
+	MessageID string
+}
+
+func (q *Queries) PutBotSetup(ctx context.Context, arg PutBotSetupParams) (BotSetup, error) {
+	row := q.db.QueryRow(ctx, putBotSetup, arg.ChannelID, arg.MessageID)
+	var i BotSetup
+	err := row.Scan(&i.ChannelID, &i.MessageID, &i.CreatedAt)
+	return i, err
 }
 
 const setDebt = `-- name: SetDebt :one

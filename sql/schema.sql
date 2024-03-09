@@ -28,3 +28,10 @@ CREATE TABLE debt_journal
     date DATE NOT NULL DEFAULT now(),
     user_id INTEGER REFERENCES player(id) ON DELETE CASCADE
 );
+
+CREATE TABLE bot_setup
+(
+    channel_id TEXT NOT NULL,
+    message_id TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT now()
+);

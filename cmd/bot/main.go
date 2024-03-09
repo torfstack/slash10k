@@ -20,7 +20,6 @@ var commands = []api.CreateCommandData{
 	{Name: "10kup", Description: "Setze den Channel in dem der Bot aktiv sein soll", Options: discord.CommandOptions{
 		&discord.ChannelOption{OptionName: "channel_id", Description: "Channel, in dem der Bot aktiv sein soll", Required: true},
 	}},
-	{Name: "10ks", Description: "Wer packt 10k in die Gildenbank?"},
 	{Name: "10k", Description: "Packt 10k in die Gildenbank!", Options: discord.CommandOptions{
 		&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
 		&discord.StringOption{OptionName: "amount", Description: "Betrag, kann negativ sein", Required: true},
@@ -38,7 +37,6 @@ func main() {
 	s.AddIntents(gateway.IntentMessageContent)
 
 	r.AddFunc("10kup", command.SetChannel(s))
-	r.AddFunc("10ks", command.GetDebts(s))
 	r.AddFunc("10k", command.AddDebt(s))
 
 	if err := cmdroute.OverwriteCommands(s, commands); err != nil {

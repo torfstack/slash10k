@@ -41,3 +41,13 @@ ORDER BY d.amount DESC, upper(p.name);
 SELECT id FROM player
 WHERE name = $1 LIMIT 1;
 
+-- name: PutBotSetup :one
+INSERT INTO bot_setup (
+    channel_id, message_id
+) VALUES (
+    $1, $2
+) RETURNING *;
+
+-- name: GetBotSetup :one
+SELECT * FROM bot_setup
+WHERE created_at = (SELECT MAX(created_at) FROM bot_setup) LIMIT 1;

@@ -8,6 +8,12 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type BotSetup struct {
+	ChannelID string
+	MessageID string
+	CreatedAt pgtype.Timestamp
+}
+
 type Char struct {
 	ID     int32
 	Name   string

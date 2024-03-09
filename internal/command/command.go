@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"scurvy10k/internal/models"
+	"scurvy10k/internal/utils"
+	"scurvy10k/sql/db"
 	"slices"
 	"strings"
 
@@ -25,18 +27,31 @@ var debtsUrl = baseUrl + "api/debt"
 var channelId discord.ChannelID
 var messageId discord.MessageID
 
-func GetDebts(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
-	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
-		debts, err := getDebts()
-		if err != nil {
-			return &api.InteractionResponseData{Content: option.NewNullableString("Error: " + err.Error())}
-		}
-		return &api.InteractionResponseData{
-			Embeds: &[]discord.Embed{
-				*transformDebtsToEmbed(debts),
-			},
-		}
+func init() {
+	conn, err := utils.GetConnection(utils.DefaultConfig())
+	if err != nil {
+		log.Error().Msgf("cannot get db connection: %s", err)
+		return
 	}
+	defer conn.Close(context.Background())
+	q := db.New(conn)
+	setup, err := q.GetBotSetup(context.Background())
+	if err != nil {
+		log.Error().Msgf("cannot get bot setup: %s", err)
+		return
+	}
+	messageIdSnowflake, err := discord.ParseSnowflake(setup.MessageID)
+	if err != nil {
+		log.Error().Msgf("cannot parse message id: %s", err)
+		return
+	}
+	messageId = discord.MessageID(messageIdSnowflake)
+	channelIdSnowflake, err := discord.ParseSnowflake(setup.ChannelID)
+	if err != nil {
+		log.Error().Msgf("cannot parse channel id: %s", err)
+		return
+	}
+	channelId = discord.ChannelID(channelIdSnowflake)
 }
 
 func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
@@ -86,6 +101,21 @@ func SetChannel(s *state.State) func(ctx context.Context, data cmdroute.CommandD
 			return &api.InteractionResponseData{Content: option.NewNullableString("Could not send message")}
 		}
 		messageId = m.ID
+		conn, err := utils.GetConnection(utils.DefaultConfig())
+		if err != nil {
+			log.Error().Msgf("cannot get db connection: %s", err)
+			return &api.InteractionResponseData{Content: option.NewNullableString("Could not get db connection")}
+		}
+		defer conn.Close(ctx)
+		q := db.New(conn)
+		_, err = q.PutBotSetup(ctx, db.PutBotSetupParams{
+			ChannelID: channelId.String(),
+			MessageID: messageId.String(),
+		})
+		if err != nil {
+			log.Error().Msgf("cannot put bot setup: %s", err)
+			return &api.InteractionResponseData{Content: option.NewNullableString("Could not put bot setup")}
+		}
 		return &api.InteractionResponseData{
 			Content: option.NewNullableString("Channel set successfully"),
 			Flags:   discord.EphemeralMessage,
