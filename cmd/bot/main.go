@@ -17,13 +17,13 @@ import (
 )
 
 var commands = []api.CreateCommandData{
+	{Name: "10kup", Description: "Setze den Channel in dem der Bot aktiv sein soll", Options: discord.CommandOptions{
+		&discord.IntegerOption{OptionName: "channel_id", Description: "Channel, in dem der Bot aktiv sein soll", Required: true},
+	}},
 	{Name: "10ks", Description: "Wer packt 10k in die Gildenbank?"},
 	{Name: "10k", Description: "Packt 10k in die Gildenbank!", Options: discord.CommandOptions{
 		&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
 		&discord.StringOption{OptionName: "amount", Description: "Betrag, kann negativ sein", Required: true},
-	}},
-	{Name: "10kchannel", Description: "Setze den Channel für 10k updates", Options: discord.CommandOptions{
-		&discord.ChannelOption{OptionName: "channel_id", Description: "Channel für 10k updates", Required: true},
 	}},
 }
 
@@ -37,16 +37,16 @@ func main() {
 	s.AddIntents(gateway.IntentGuilds)
 	s.AddIntents(gateway.IntentMessageContent)
 
+	r.AddFunc("10kup", command.SetChannel(s))
 	r.AddFunc("10ks", command.GetDebts(s))
 	r.AddFunc("10k", command.AddDebt(s))
-	r.AddFunc("10kchannel", command.SetChannel(s))
 
 	if err := cmdroute.OverwriteCommands(s, commands); err != nil {
 		log.Fatal().Msgf("cannot update commands: %s", err)
 	}
 
 	log.Info().Msg("connecting scurvy10k-bot")
-	if err := s.Connect(context.TODO()); err != nil {
+	if err := s.Connect(context.Background()); err != nil {
 		log.Fatal().Msgf("cannot connect: %s", err)
 	}
 }
