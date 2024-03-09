@@ -18,7 +18,7 @@ import (
 
 var commands = []api.CreateCommandData{
 	{Name: "10kup", Description: "Setze den Channel in dem der Bot aktiv sein soll", Options: discord.CommandOptions{
-		&discord.IntegerOption{OptionName: "channel_id", Description: "Channel, in dem der Bot aktiv sein soll", Required: true},
+		&discord.ChannelOption{OptionName: "channel_id", Description: "Channel, in dem der Bot aktiv sein soll", Required: true},
 	}},
 	{Name: "10ks", Description: "Wer packt 10k in die Gildenbank?"},
 	{Name: "10k", Description: "Packt 10k in die Gildenbank!", Options: discord.CommandOptions{
