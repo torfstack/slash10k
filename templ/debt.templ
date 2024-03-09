@@ -3,6 +3,8 @@ package frontend
 import (
     "scurvy10k/internal/models"
     "fmt"
+    "golang.org/x/text/language"
+    "golang.org/x/text/cases"
 )
 
 templ Debt() {
@@ -44,10 +46,10 @@ templ DebtsView() {
 templ DebtView(debt models.PlayerDebt) {
     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
         <td scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-            {debt.Name}
+            { cases.Title(language.English).String(debt.Name) }
         </td>
         <td class="px-6 py-4">
-            {debt.Amount}
+            { debt.Amount }
         </td>
         <td class="px-6 py-4">
             <button hx-trigger="click" hx-post={ fmt.Sprintf("/api/debt/%s/10000", debt.Name) } hx-swap="innerHTML" hx-target="#players"
