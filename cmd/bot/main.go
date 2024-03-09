@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -61,10 +62,10 @@ func main() {
 
 	r.AddFunc("10k", func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 		options := data.Options
-		nameOption := options.Find("name")
-		amount := options.Find("amount")
+		name := options.Find("name").String()
+		amount := options.Find("amount").String()
 
-		res, err := http.Post(debtsUrl+"/"+nameOption.String()+"/"+amount.String(), "application/json", nil)
+		res, err := http.Post(debtsUrl+"/"+name+"/"+amount, "application/json", nil)
 		if err != nil {
 			log.Error().Msgf("cannot post debt: %s", err)
 			return &api.InteractionResponseData{Content: option.NewNullableString("Error: " + err.Error())}
@@ -77,7 +78,10 @@ func main() {
 		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
 			updateDebtsMessage(s)
 		}
-		return &api.InteractionResponseData{Content: option.NullString}
+		return &api.InteractionResponseData{
+			Content: option.NewNullableString(fmt.Sprintf("Added %v to %v", amount, name)),
+			Flags:   discord.EphemeralMessage,
+		}
 	})
 
 	r.AddFunc("10kup", func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
@@ -100,7 +104,10 @@ func main() {
 			return &api.InteractionResponseData{Content: option.NewNullableString("Could not send message")}
 		}
 		messageId = m.ID
-		return &api.InteractionResponseData{Content: option.NullString}
+		return &api.InteractionResponseData{
+			Content: option.NewNullableString("Channel set successfully"),
+			Flags:   discord.EphemeralMessage,
+		}
 	})
 
 	if err := cmdroute.OverwriteCommands(s, commands); err != nil {
