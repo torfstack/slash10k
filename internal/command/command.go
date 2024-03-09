@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"scurvy10k/internal/models"
+	"slices"
+	"strings"
 
 	"github.com/rs/zerolog/log"
 
@@ -110,14 +112,16 @@ func getDebts() (*models.AllDebtsResponse, error) {
 }
 
 func transformDebtsToEmbed(debts *models.AllDebtsResponse) *discord.Embed {
-	var fields []discord.EmbedField
+	maxLength := len(slices.MaxFunc(debts.Debts, func(d1, d2 models.PlayerDebt) int {
+		return len(d1.Name) - len(d2.Name)
+	}).Name)
+	debtString := strings.Builder{}
+	debtString.WriteString("```")
 	for _, d := range debts.Debts {
-		fields = append(fields, discord.EmbedField{
-			Name:   d.Name,
-			Value:  d.Amount,
-			Inline: true,
-		})
+		debtString.WriteString(fmt.Sprintf("%-*s %v\n", maxLength, d.Name, d.Amount))
 	}
+	debtString.WriteString("```")
+
 	return &discord.Embed{
 		Title:       "True",
 		Type:        discord.NormalEmbed,
@@ -129,7 +133,13 @@ func transformDebtsToEmbed(debts *models.AllDebtsResponse) *discord.Embed {
 			Text: "https://github.com/torfstack/scurvy10k",
 			Icon: "https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png",
 		},
-		Fields: fields,
+		Fields: []discord.EmbedField{
+			{
+				Name:   "Spieler",
+				Value:  debtString.String(),
+				Inline: false,
+			},
+		},
 	}
 }
 
