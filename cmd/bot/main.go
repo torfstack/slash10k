@@ -3,14 +3,15 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"github.com/diamondburned/arikawa/v3/discord"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"io"
 	"net/http"
 	"os"
 	"scurvy10k/internal/models"
 	"strings"
+
+	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/api/cmdroute"
@@ -25,15 +26,10 @@ var commands = []api.CreateCommandData{
 		&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
 		&discord.StringOption{OptionName: "amount", Description: "Betrag, kann negativ sein", Required: true},
 	}},
-	{Name: "10kup", Description: "Setup 10k-bot, create channel '10k-bot'", Options: discord.CommandOptions{
-		&discord.ChannelOption{OptionName: "channel_id", Description: "Channel, in dem der Bot aktiv sein soll", Required: true},
-	}},
 }
 
 var baseUrl = "https://true.torfstack.com/"
 var debtsUrl = baseUrl + "api/debt"
-
-var messageId discord.MessageID
 
 func main() {
 	setupLogger()
@@ -45,7 +41,31 @@ func main() {
 		if err != nil {
 			return &api.InteractionResponseData{Content: option.NewNullableString("Error: " + err.Error())}
 		}
-		return &api.InteractionResponseData{Content: option.NewNullableString(debts)}
+		var fields []discord.EmbedField
+		for _, d := range debts.Debts {
+			fields = append(fields, discord.EmbedField{
+				Name:   d.Name,
+				Value:  d.Amount,
+				Inline: true,
+			})
+		}
+		return &api.InteractionResponseData{
+			Embeds: &[]discord.Embed{
+				{
+					Title:       "True",
+					Type:        discord.NormalEmbed,
+					Description: "10k in die Gildenbank!",
+					URL:         baseUrl,
+					Timestamp:   discord.NowTimestamp(),
+					Color:       discord.DefaultEmbedColor,
+					Footer: &discord.EmbedFooter{
+						Text: "add features https://github.com/torfstack/scurvy10k",
+						Icon: "https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png",
+					},
+					Fields: fields,
+				},
+			},
+		}
 	})
 
 	r.AddFunc("10k", func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
@@ -63,35 +83,13 @@ func main() {
 			log.Error().Msgf("cannot post debt: %s", res.Status)
 			return &api.InteractionResponseData{Content: option.NewNullableString("Error: " + res.Status)}
 		}
-		return &api.InteractionResponseData{Content: option.NewNullableString("Erfolgreich!")}
+		return nil
 	})
 
 	s := state.New("Bot " + os.Getenv("DISCORD_TOKEN"))
 	s.AddInteractionHandler(r)
 	s.AddIntents(gateway.IntentGuilds)
 	s.AddIntents(gateway.IntentMessageContent)
-
-	r.AddFunc("10kup", func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
-		options := data.Options
-		channelOption := options.Find("channel_id")
-		i, err := channelOption.SnowflakeValue()
-		if err != nil {
-			return &api.InteractionResponseData{Content: option.NewNullableString("Error: " + err.Error())}
-		}
-		channelID := discord.ChannelID(i)
-
-		debts, err := getDebts()
-		if err != nil {
-			return &api.InteractionResponseData{Content: option.NewNullableString("Error: " + err.Error())}
-		}
-		m, err := s.SendMessage(channelID, debts)
-		if err != nil {
-			return &api.InteractionResponseData{Content: option.NewNullableString("Error: " + err.Error())}
-		}
-		messageId = m.ID
-
-		return &api.InteractionResponseData{Content: option.NewNullableString("Erfolgreich!")}
-	})
 
 	if err := cmdroute.OverwriteCommands(s, commands); err != nil {
 		log.Fatal().Msgf("cannot update commands: %s", err)
@@ -120,24 +118,20 @@ func setupLogger() {
 	log.Logger = log.Output(output)
 }
 
-func getDebts() (string, error) {
+func getDebts() (*models.AllDebtsResponse, error) {
 	res, err := http.Get(debtsUrl)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer res.Body.Close()
 	bytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	var debts models.AllDebtsResponse
 	if err = json.Unmarshal(bytes, &debts); err != nil {
 		log.Error().Msgf("cannot unmarshal debts: %s", err)
-		return "", err
+		return nil, err
 	}
-	b := strings.Builder{}
-	for _, d := range debts.Debts {
-		b.WriteString(d.Name + ": " + d.Amount + "\n")
-	}
-	return b.String(), nil
+	return &debts, nil
 }
