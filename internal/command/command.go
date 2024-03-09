@@ -161,7 +161,7 @@ func transformDebtsToEmbed(debts *models.AllDebtsResponse) *discord.Embed {
 		Description: "10k in die Gildenbank!",
 		URL:         baseUrl,
 		Timestamp:   discord.NowTimestamp(),
-		Color:       discord.DefaultEmbedColor,
+		Color:       discord.Color(0xF1C40F),
 		Footer: &discord.EmbedFooter{
 			Text: "https://github.com/torfstack/scurvy10k",
 			Icon: "https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png",
