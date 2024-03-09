@@ -45,6 +45,24 @@ spec:
         - name: {{ .Values.appName }}-bot
           image: {{ .Values.botImage.name }}:{{ .Values.botImage.tag }}
           env:
+            - name: DATABASE_CONNECTION_HOST
+              value: {{ .Values.database.host }}
+            - name: DATABASE_CONNECTION_PORT
+              value: {{ quote .Values.database.port }}
+            - name: DATABASE_CONNECTION_DBNAME
+              value: {{ .Values.database.dbname }}
+            - name: DATABASE_CONNECTION_USER
+              value: {{ .Values.database.user }}
+            - name: DATABASE_CONNECTION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: scurvy10k
+                  key: db-password
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: scurvy10k
+                  key: admin-password
             - name: DISCORD_TOKEN
               valueFrom:
                 secretKeyRef:
