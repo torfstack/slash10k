@@ -26,7 +26,7 @@ INSERT INTO debt_journal (
 INSERT INTO player (
     name
 ) VALUES (
-    $1
+    lower($1)
 ) RETURNING *;
 
 -- name: NumberOfPlayers :one
@@ -39,7 +39,7 @@ ORDER BY d.amount DESC, upper(p.name);
 
 -- name: GetIdOfPlayer :one
 SELECT id FROM player
-WHERE name = $1 LIMIT 1;
+WHERE name = lower($1) LIMIT 1;
 
 -- name: PutBotSetup :one
 INSERT INTO bot_setup (

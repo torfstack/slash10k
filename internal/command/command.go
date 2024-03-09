@@ -13,6 +13,8 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog/log"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/api/cmdroute"
@@ -147,8 +149,9 @@ func transformDebtsToEmbed(debts *models.AllDebtsResponse) *discord.Embed {
 	}).Name)
 	debtString := strings.Builder{}
 	debtString.WriteString("```")
+	caser := cases.Title(language.English)
 	for _, d := range debts.Debts {
-		debtString.WriteString(fmt.Sprintf("%-*s %v\n", maxLength, d.Name, d.Amount))
+		debtString.WriteString(fmt.Sprintf("%-*s %v\n", maxLength, caser.String(d.Name), d.Amount))
 	}
 	debtString.WriteString("```")
 

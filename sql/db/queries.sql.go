@@ -42,12 +42,12 @@ const addPlayer = `-- name: AddPlayer :one
 INSERT INTO player (
     name
 ) VALUES (
-    $1
+    lower($1)
 ) RETURNING id, name
 `
 
-func (q *Queries) AddPlayer(ctx context.Context, name string) (Player, error) {
-	row := q.db.QueryRow(ctx, addPlayer, name)
+func (q *Queries) AddPlayer(ctx context.Context, lower string) (Player, error) {
+	row := q.db.QueryRow(ctx, addPlayer, lower)
 	var i Player
 	err := row.Scan(&i.ID, &i.Name)
 	return i, err
@@ -126,11 +126,11 @@ func (q *Queries) GetDebt(ctx context.Context, userID pgtype.Int4) (Debt, error)
 
 const getIdOfPlayer = `-- name: GetIdOfPlayer :one
 SELECT id FROM player
-WHERE name = $1 LIMIT 1
+WHERE name = lower($1) LIMIT 1
 `
 
-func (q *Queries) GetIdOfPlayer(ctx context.Context, name string) (int32, error) {
-	row := q.db.QueryRow(ctx, getIdOfPlayer, name)
+func (q *Queries) GetIdOfPlayer(ctx context.Context, lower string) (int32, error) {
+	row := q.db.QueryRow(ctx, getIdOfPlayer, lower)
 	var id int32
 	err := row.Scan(&id)
 	return id, err
