@@ -36,6 +36,12 @@ var (
 )
 
 func init() {
+	userId, err := discord.ParseSnowflake("263352209654153236")
+	if err != nil {
+		log.Error().Msgf("cannot parse torfstack id: %s", err)
+		return
+	}
+	torfstackId = discord.UserID(userId)
 	conn, err := utils.GetConnection(utils.DefaultConfig())
 	if err != nil {
 		log.Error().Msgf("cannot get db connection: %s", err)
@@ -60,12 +66,6 @@ func init() {
 		return
 	}
 	channelId = discord.ChannelID(channelIdSnowflake)
-	userId, err := discord.ParseSnowflake("263352209654153236")
-	if err != nil {
-		log.Error().Msgf("cannot parse torfstack id: %s", err)
-		return
-	}
-	torfstackId = discord.UserID(userId)
 }
 
 func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
