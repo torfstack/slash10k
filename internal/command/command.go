@@ -172,12 +172,12 @@ func transformDebtsToEmbed(debts *models.AllDebtsResponse) *discord.Embed {
 	return &discord.Embed{
 		Title:       ":moneybag: 10k in die Gildenbank!",
 		Type:        discord.NormalEmbed,
-		Description: "[Web-Ansicht](https://true.torfstack.com/) | v" + version,
+		Description: "[GitHub](https://github.com/torfstack/scurvy10k) | v" + version,
 		Timestamp:   discord.NowTimestamp(),
 		Color:       discord.Color(0xF1C40F),
 		Footer: &discord.EmbedFooter{
-			Text: "https://github.com/torfstack/scurvy10k",
-			Icon: "https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png",
+			Text: "/10k <Spieler> <Betrag>",
+			Icon: "https://true.torfstack.com/coin.png",
 		},
 		Fields: []discord.EmbedField{
 			{
