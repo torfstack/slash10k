@@ -68,6 +68,8 @@ spec:
                 secretKeyRef:
                   name: scurvy10k
                   key: discord-token
+            - name: VERSION
+              value: {{ .Values.botImage.tag }}
       imagePullSecrets:
         - name: regcred
   strategy:

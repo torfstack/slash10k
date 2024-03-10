@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"scurvy10k/internal/models"
 	"scurvy10k/internal/utils"
 	"scurvy10k/sql/db"
@@ -167,11 +168,11 @@ func transformDebtsToEmbed(debts *models.AllDebtsResponse) *discord.Embed {
 	}
 	debtString.WriteString("```")
 
+	version := os.Getenv("VERSION")
 	return &discord.Embed{
-		Title:       "True",
+		Title:       ":moneybag: 10k in die Gildenbank!",
 		Type:        discord.NormalEmbed,
-		Description: "10k in die Gildenbank!",
-		URL:         BaseUrl,
+		Description: "[Web-Ansicht](https://true.torfstack.com/) | v" + version,
 		Timestamp:   discord.NowTimestamp(),
 		Color:       discord.Color(0xF1C40F),
 		Footer: &discord.EmbedFooter{
