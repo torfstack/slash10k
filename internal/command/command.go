@@ -23,11 +23,16 @@ import (
 	"github.com/diamondburned/arikawa/v3/utils/json/option"
 )
 
-var baseUrl = "https://true.torfstack.com/"
-var debtsUrl = baseUrl + "api/debt"
+const (
+	BaseUrl  = "https://true.torfstack.com/"
+	DebtsUrl = BaseUrl + "api/debt"
+)
 
-var channelId discord.ChannelID
-var messageId discord.MessageID
+var (
+	torfstackId discord.UserID
+	channelId   discord.ChannelID
+	messageId   discord.MessageID
+)
 
 func init() {
 	conn, err := utils.GetConnection(utils.DefaultConfig())
@@ -54,6 +59,12 @@ func init() {
 		return
 	}
 	channelId = discord.ChannelID(channelIdSnowflake)
+	userId, err := discord.ParseSnowflake("263352209654153236")
+	if err != nil {
+		log.Error().Msgf("cannot parse torfstack id: %s", err)
+		return
+	}
+	torfstackId = discord.UserID(userId)
 }
 
 func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
@@ -62,15 +73,15 @@ func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 		name := options.Find("name").String()
 		amount := options.Find("amount").String()
 
-		res, err := http.Post(debtsUrl+"/"+name+"/"+amount, "application/json", nil)
+		res, err := http.Post(DebtsUrl+"/"+name+"/"+amount, "application/json", nil)
 		if err != nil {
-			log.Error().Msgf("cannot post debt: %s", err)
-			return &api.InteractionResponseData{Content: option.NewNullableString("Error: " + err.Error())}
+			log.Error().Msgf("could not send debt post request: %s", err)
+			return ephemeralMessage("Could not update debt")
 		}
 		defer res.Body.Close()
 		if res.StatusCode != http.StatusOK {
-			log.Error().Msgf("cannot post debt: %s", res.Status)
-			return &api.InteractionResponseData{Content: option.NewNullableString("Error: " + res.Status)}
+			log.Error().Msgf("debt post request was not successful: %s", res.Status)
+			return ephemeralMessage("Could not update debt")
 		}
 		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
 			updateDebtsMessage(s)
@@ -84,29 +95,33 @@ func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 
 func SetChannel(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+		if data.Event.SenderID() != torfstackId {
+			log.Error().Msgf("cannot set channel: not torfstack")
+			return ephemeralMessage("You are not allowed to set the channel, ask Torfstack!")
+		}
 		options := data.Options
 		var err error
 		cId, err := options.Find("channel_id").SnowflakeValue()
 		if err != nil {
 			log.Error().Msgf("cannot get channel_id: %s", err)
-			return &api.InteractionResponseData{Content: option.NewNullableString("Could not set channel")}
+			return ephemeralMessage("Could not set channel")
 		}
 		channelId = discord.ChannelID(cId)
 		debts, err := getDebts()
 		if err != nil {
 			log.Error().Msgf("cannot get debts: %s", err)
-			return &api.InteractionResponseData{Content: option.NewNullableString("Could not get debts")}
+			return ephemeralMessage("Could not get debts")
 		}
 		m, err := s.SendMessage(discord.ChannelID(channelId), "", *transformDebtsToEmbed(debts))
 		if err != nil {
 			log.Error().Msgf("cannot send message: %s", err)
-			return &api.InteractionResponseData{Content: option.NewNullableString("Could not send message")}
+			return ephemeralMessage("Could not send message")
 		}
 		messageId = m.ID
 		conn, err := utils.GetConnection(utils.DefaultConfig())
 		if err != nil {
 			log.Error().Msgf("cannot get db connection: %s", err)
-			return &api.InteractionResponseData{Content: option.NewNullableString("Could not get db connection")}
+			return ephemeralMessage("Could not get db connection")
 		}
 		defer conn.Close(ctx)
 		q := db.New(conn)
@@ -116,17 +131,14 @@ func SetChannel(s *state.State) func(ctx context.Context, data cmdroute.CommandD
 		})
 		if err != nil {
 			log.Error().Msgf("cannot put bot setup: %s", err)
-			return &api.InteractionResponseData{Content: option.NewNullableString("Could not put bot setup")}
+			return ephemeralMessage("Could not put bot setup")
 		}
-		return &api.InteractionResponseData{
-			Content: option.NewNullableString("Channel set successfully"),
-			Flags:   discord.EphemeralMessage,
-		}
+		return ephemeralMessage("Channel set successfully")
 	}
 }
 
 func getDebts() (*models.AllDebtsResponse, error) {
-	res, err := http.Get(debtsUrl)
+	res, err := http.Get(DebtsUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +171,7 @@ func transformDebtsToEmbed(debts *models.AllDebtsResponse) *discord.Embed {
 		Title:       "True",
 		Type:        discord.NormalEmbed,
 		Description: "10k in die Gildenbank!",
-		URL:         baseUrl,
+		URL:         BaseUrl,
 		Timestamp:   discord.NowTimestamp(),
 		Color:       discord.Color(0xF1C40F),
 		Footer: &discord.EmbedFooter{
@@ -189,4 +201,11 @@ func updateDebtsMessage(s *state.State) {
 		return
 	}
 	messageId = m.ID
+}
+
+func ephemeralMessage(content string) *api.InteractionResponseData {
+	return &api.InteractionResponseData{
+		Content: option.NewNullableString(content),
+		Flags:   discord.EphemeralMessage,
+	}
 }
