@@ -97,7 +97,7 @@ func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 func SetChannel(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 		if data.Event.SenderID() != torfstackId {
-			log.Error().Msgf("cannot set channel: not torfstack")
+			log.Error().Msgf("cannot set channel: not torfstack, got %v", data.Event.SenderID())
 			return ephemeralMessage("You are not allowed to set the channel, ask Torfstack!")
 		}
 		options := data.Options
