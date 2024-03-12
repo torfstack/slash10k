@@ -36,6 +36,7 @@ func main() {
 	s.AddIntents(gateway.IntentGuilds)
 	s.AddIntents(gateway.IntentMessageContent)
 
+	command.Setup()
 	r.AddFunc("10kup", command.SetChannel(s))
 	r.AddFunc("10k", command.AddDebt(s))
 

@@ -35,7 +35,7 @@ var (
 	messageId   discord.MessageID
 )
 
-func init() {
+func Setup() {
 	userId, err := discord.ParseSnowflake("263352209654153236")
 	if err != nil {
 		log.Error().Msgf("cannot parse torfstack id: %s", err)
