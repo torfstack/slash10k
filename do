@@ -79,7 +79,7 @@ start() {
       clean
       ;;
     db_apply)
-      db_apply "$@"
+      db_apply
       ;;
     db_migrate)
       db_migrate "$@"
