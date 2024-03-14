@@ -23,6 +23,7 @@ var commands = []api.CreateCommandData{
 	{Name: "10k", Description: "Packt 10k in die Gildenbank!", Options: discord.CommandOptions{
 		&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
 		&discord.StringOption{OptionName: "amount", Description: "Betrag, kann negativ sein", Required: true},
+		&discord.StringOption{OptionName: "reason", Description: "Grund", Required: false},
 	}},
 }
 

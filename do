@@ -91,7 +91,7 @@ start() {
       deploy
       ;;
     *)
-      echo "Usage: do [build|clean|db_apply|db_migrate|deploy|gen]"
+      echo "Usage: do [build|clean|db_apply|db_migrate|db_status|deploy|gen]"
       exit 1
       ;;
   esac

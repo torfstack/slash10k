@@ -116,6 +116,7 @@ func nameAndAmount(c echo.Context) (string, int64, error) {
 
 func AddDebt(c echo.Context) error {
 	name, amount, err := nameAndAmount(c)
+	reason := c.Param("reason")
 	if err != nil {
 		return err
 	}
