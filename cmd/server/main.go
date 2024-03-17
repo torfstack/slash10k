@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"scurvy10k/internal/db"
 	"scurvy10k/internal/handler"
 	"strings"
 
@@ -14,6 +15,8 @@ import (
 
 func main() {
 	setupLogger()
+
+	d := db.NewDatabase()
 
 	e := echo.New()
 
@@ -29,9 +32,9 @@ func main() {
 	e.Static("/", "assets")
 
 	api := e.Group("/api")
-	api.GET("/debt", handler.AllDebts)
+	api.GET("/debt", handler.AllDebts(d))
 	api.GET("/debt/:player", handler.GetDebt)
-	api.POST("/debt/:player/:amount", handler.AddDebt)
+	api.POST("/debt/:player/:amount", handler.AddDebt(d))
 
 	admin := api.Group("/admin")
 
@@ -49,7 +52,7 @@ func main() {
 		}))
 	}
 
-	admin.POST("/player/:name", handler.AddPlayer)
+	admin.POST("/player/:name", handler.AddPlayer(d))
 	admin.DELETE("/player/:name", handler.DeletePlayer)
 	admin.POST("/char", handler.AddChar)
 	admin.DELETE("/char/:name", handler.DeleteChar)

@@ -4,8 +4,8 @@ tmp_dir = "tmp"
 
 [build]
   args_bin = []
-  bin = "./bin/main"
-  cmd = "sqlc generate && templ generate && go build -ldflags \"-X main.adminPw=disabled\" -o ./bin/main ./cmd/server/main.go"
+  bin = "./tmp/main"
+  cmd = "sqlc generate && templ generate && go build -ldflags \"-X main.adminPw=disabled\" -o ./tmp/main ./cmd/server/main.go"
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata", "sql/gen"]
   exclude_file = []
@@ -39,7 +39,7 @@ tmp_dir = "tmp"
   time = false
 
 [misc]
-  clean_on_exit = false
+  clean_on_exit = true
 
 [screen]
   clear_on_rebuild = false

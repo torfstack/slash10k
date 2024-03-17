@@ -8,9 +8,9 @@ import (
 	"scurvy10k/internal/config"
 )
 
-func GetConnection(config config.Config) (*pgx.Conn, error) {
+func GetConnection(ctx context.Context, config config.Config) (*pgx.Conn, error) {
 	s := config.ConnectionString
-	return pgx.Connect(context.Background(), s)
+	return pgx.Connect(ctx, s)
 }
 
 func DefaultConfig() config.Config {

@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"github.com/rs/zerolog/log"
 	"net/http"
+	"scurvy10k/internal/db"
 	"scurvy10k/internal/models"
-	"scurvy10k/internal/utils"
 	sqlc "scurvy10k/sql/gen"
 	frontend "scurvy10k/templ"
 	"strconv"
 	"strings"
 
-	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
 )
@@ -27,8 +26,23 @@ var (
 	ErrDebtNegative = errors.New("debt cannot be negative")
 )
 
-func AllDebts(c echo.Context) error {
-	debts, err := allDebts()
+func AllDebts(d db.Database) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		ctx := c.Request().Context()
+		conn, err := d.Connect(ctx)
+		defer func(conn db.Connection, ctx context.Context) {
+			_ = conn.Close(ctx)
+		}(conn, ctx)
+		if err != nil {
+			return fmt.Errorf("could not get db connection: %w", err)
+		}
+
+		return allDebtsRespond(c, conn)
+	}
+}
+
+func allDebtsRespond(c echo.Context, conn db.Connection) error {
+	debts, err := allDebts(conn, c.Request().Context())
 	if err != nil {
 		log.Err(err).Msg("could not get all debts")
 		return c.String(500, "could not get all debts")
@@ -53,13 +67,8 @@ func AllDebts(c echo.Context) error {
 	return c.String(400, "unsupported accept header")
 }
 
-func allDebts() ([]models.PlayerDebt, error) {
-	conn, err := utils.GetConnection(utils.DefaultConfig())
-	if err != nil {
-		return nil, fmt.Errorf("could not get db connection: %w", err)
-	}
-	q := sqlc.New(conn)
-	dbDebts, err := q.AllPlayerDebts(context.Background())
+func allDebts(conn db.Connection, ctx context.Context) ([]models.PlayerDebt, error) {
+	dbDebts, err := conn.GetAllDebts(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not get all player debts: %w", err)
 	}
@@ -73,48 +82,45 @@ func allDebts() ([]models.PlayerDebt, error) {
 	return debts, nil
 }
 
-func AddDebt(c echo.Context) error {
-	name := c.Param("player")
-	if name == "" {
-		return c.String(400, "name is required!")
-	}
+func AddDebt(d db.Database) func(c echo.Context) error {
+	return func(c echo.Context) error {
+		name := c.Param("player")
+		if name == "" {
+			return c.String(400, "name is required!")
+		}
 
-	a := c.Param("amount")
-	if a == "" {
-		return c.String(400, "amount is required!")
-	}
-	amount, err := strconv.ParseInt(a, 10, 64)
-	if err != nil {
-		return c.String(400, "amount must be an integer!")
-	}
+		a := c.Param("amount")
+		if a == "" {
+			return c.String(400, "amount is required!")
+		}
+		amount, err := strconv.ParseInt(a, 10, 64)
+		if err != nil {
+			return c.String(400, "amount must be an integer!")
+		}
 
-	err = addDebtToPlayer(name, amount)
-	if err != nil {
-		log.Err(err).Msg("could not add debt to player")
-		return c.String(500, "could not add debt to player")
-	}
+		ctx := c.Request().Context()
+		conn, err := d.Connect(ctx)
+		if err != nil {
+			log.Err(err).Msg("could not get db connection!")
+			return c.String(500, "could not get db connection!")
+		}
 
-	return AllDebts(c)
+		err = addDebtToPlayer(ctx, conn, name, amount)
+		if err != nil {
+			log.Err(err).Msg("could not add debt to player")
+			return c.String(500, "could not add debt to player")
+		}
+
+		return allDebtsRespond(c, conn)
+	}
 }
 
-func addDebtToPlayer(name string, amount int64) error {
-	conn, err := utils.GetConnection(utils.DefaultConfig())
-	if err != nil {
-		return fmt.Errorf("could not get db connection: %w", err)
-	}
-	defer func(conn *pgx.Conn, ctx context.Context) {
-		_ = conn.Close(ctx)
-	}(conn, context.Background())
-
-	q := sqlc.New(conn)
-	pId, err := q.GetIdOfPlayer(context.Background(), name)
+func addDebtToPlayer(ctx context.Context, conn db.Connection, name string, amount int64) error {
+	pId, err := conn.GetIdOfPlayer(ctx, name)
 	if err != nil {
 		return fmt.Errorf("could not get player id for %s: %w", name, err)
 	}
-	currentDebt, err := q.GetDebt(context.Background(), pgtype.Int4{
-		Int32: pId,
-		Valid: true,
-	})
+	currentDebt, err := conn.GetDebt(ctx, pId)
 	if err != nil {
 		return fmt.Errorf("could not get debt for player (id:%v): %w", pId, err)
 	}
@@ -126,7 +132,7 @@ func addDebtToPlayer(name string, amount int64) error {
 	if newAmount > 1_000_000 {
 		return ErrDebtTooHigh
 	}
-	_, err = q.UpdateDebt(context.Background(), sqlc.UpdateDebtParams{
+	err = conn.UpdateDebt(ctx, sqlc.UpdateDebtParams{
 		Amount: currentDebt.Amount + amount,
 		UserID: pgtype.Int4{
 			Int32: pId,
