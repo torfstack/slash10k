@@ -48,6 +48,16 @@ db_status() {
   atlas migrate status --url "postgres://scurvy10k:$pw@localhost:5432/scurvy10k?search_path=public&sslmode=disable"
 }
 
+run() {
+  check_installed "air"
+  echo "Running..."
+  DATABASE_CONNECTION_HOST=localhost \
+    DATABASE_CONNECTION_PORT=5432 \
+    DATABASE_CONNECTION_USER=postgres \
+    DATABASE_CONNECTION_PASSWORD=mysecretpassword \
+    DATABASE_CONNECTION_DBNAME=scurvy10k air
+}
+
 gen() {
   check_installed "templ"
 
@@ -90,8 +100,11 @@ start() {
     deploy)
       deploy
       ;;
+    run)
+      run
+      ;;
     *)
-      echo "Usage: do [build|clean|db_apply|db_migrate|db_status|deploy|gen]"
+      echo "Usage: do [build|clean|db_apply|db_migrate|db_status|deploy|gen|run]"
       exit 1
       ;;
   esac

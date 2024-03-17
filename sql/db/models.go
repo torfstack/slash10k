@@ -32,7 +32,7 @@ type DebtJournal struct {
 	ID          int32
 	Amount      int64
 	Description string
-	Date        pgtype.Date
+	Date        pgtype.Timestamp
 	UserID      pgtype.Int4
 }
 
