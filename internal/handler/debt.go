@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"scurvy10k/internal/models"
 	"scurvy10k/internal/utils"
@@ -15,7 +16,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
-	"github.com/rs/zerolog/log"
 )
 
 func GetDebt(c echo.Context) error {
@@ -23,116 +23,84 @@ func GetDebt(c echo.Context) error {
 }
 
 var (
-	ErrNameNotSpecified   = errors.New("name is required")
-	ErrAmountNotSpecified = errors.New("amount is required")
+	ErrDebtTooHigh  = errors.New("debt cannot be more than 1_000_000")
+	ErrDebtNegative = errors.New("debt cannot be negative")
 )
 
 func AllDebts(c echo.Context) error {
-	if c.Request().Header.Get("Accept") == "text/html" {
-		s, err := allDebtsHtml()
-		if err != nil {
-			return err
-		}
-		return c.HTML(http.StatusOK, s)
-	} else {
-		debts, err := allDebtsJson()
-		if err != nil {
-			return err
-		}
-		return c.JSON(http.StatusOK, debts)
-	}
-}
-
-func allDebtsHtml() (string, error) {
 	debts, err := allDebts()
 	if err != nil {
-		return "", err
+		log.Err(err).Msg("could not get all debts")
+		return c.String(500, "could not get all debts")
 	}
-	ctx := context.Background()
-
-	b := strings.Builder{}
-	for _, d := range debts {
-		err = frontend.DebtView(d).Render(ctx, &b)
-		if err != nil {
-			return "", err
+	switch c.Request().Header.Get("Accept") {
+	case "text/html":
+		b := strings.Builder{}
+		for _, debt := range debts {
+			err = frontend.DebtView(debt).Render(context.Background(), &b)
+			if err != nil {
+				log.Err(err).Msg("could not render debt")
+				return c.String(500, "could not render debt")
+			}
 		}
+		return c.HTML(http.StatusOK, b.String())
+	case "application/json":
+	case "":
+		return c.JSON(http.StatusOK, models.AllDebtsResponse{
+			Debts: debts,
+		})
 	}
-
-	return b.String(), nil
-}
-
-func allDebtsJson() (*models.AllDebtsResponse, error) {
-	debts, err := allDebts()
-	if err != nil {
-		return nil, err
-	}
-	return &models.AllDebtsResponse{
-		Debts: debts,
-	}, nil
+	return c.String(400, "unsupported accept header")
 }
 
 func allDebts() ([]models.PlayerDebt, error) {
 	conn, err := utils.GetConnection(utils.DefaultConfig())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not get db connection: %w", err)
 	}
 	q := db.New(conn)
 	dbDebts, err := q.AllPlayerDebts(context.Background())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not get all player debts: %w", err)
 	}
 	var debts []models.PlayerDebt
 	for _, debtRow := range dbDebts {
-		debts = append(debts, playerDebtFromDb(debtRow))
+		debts = append(debts, models.PlayerDebt{
+			Name:   debtRow.Name,
+			Amount: fmt.Sprint(debtRow.Amount),
+		})
 	}
 	return debts, nil
 }
 
-func playerDebtFromDb(debtRow db.AllPlayerDebtsRow) models.PlayerDebt {
-	return models.PlayerDebt{
-		Name:   debtRow.Name,
-		Amount: fmt.Sprint(debtRow.Amount),
-	}
-}
-
-func nameAndAmount(c echo.Context) (string, int64, error) {
+func AddDebt(c echo.Context) error {
 	name := c.Param("player")
 	if name == "" {
-		_ = c.String(400, "Name is required!")
-		return "", 0, ErrNameNotSpecified
+		return c.String(400, "name is required!")
 	}
 
-	amount := c.Param("amount")
-	if amount == "" {
-		_ = c.String(400, "Amount is required!")
-		return "", 0, ErrAmountNotSpecified
+	a := c.Param("amount")
+	if a == "" {
+		return c.String(400, "amount is required!")
 	}
-	a, err := strconv.ParseInt(amount, 10, 64)
+	amount, err := strconv.ParseInt(a, 10, 64)
 	if err != nil {
-		return "", 0, c.String(400, "Amount must be an integer!")
-	}
-	return name, a, nil
-}
-
-func AddDebt(c echo.Context) error {
-	name, amount, err := nameAndAmount(c)
-	if err != nil {
-		return err
+		return c.String(400, "amount must be an integer!")
 	}
 
-	err = addDebtToPlayer(name, amount, c)
+	err = addDebtToPlayer(name, amount)
 	if err != nil {
-		return err
+		log.Err(err).Msg("could not add debt to player")
+		return c.String(500, "could not add debt to player")
 	}
 
 	return AllDebts(c)
 }
 
-func addDebtToPlayer(name string, amount int64, c echo.Context) error {
+func addDebtToPlayer(name string, amount int64) error {
 	conn, err := utils.GetConnection(utils.DefaultConfig())
 	if err != nil {
-		_ = c.String(500, "Could not get db connection!")
-		return err
+		return fmt.Errorf("could not get db connection: %w", err)
 	}
 	defer func(conn *pgx.Conn, ctx context.Context) {
 		_ = conn.Close(ctx)
@@ -141,28 +109,22 @@ func addDebtToPlayer(name string, amount int64, c echo.Context) error {
 	q := db.New(conn)
 	pId, err := q.GetIdOfPlayer(context.Background(), name)
 	if err != nil {
-		log.Error().Msgf("could not get player id for %s: %v", name, err)
-		_ = c.String(400, "Could not get player id!")
-		return err
+		return fmt.Errorf("could not get player id for %s: %w", name, err)
 	}
 	currentDebt, err := q.GetDebt(context.Background(), pgtype.Int4{
 		Int32: pId,
 		Valid: true,
 	})
 	if err != nil {
-		log.Error().Msgf("could not get debt for player %s(id:%v): %s", name, pId, err)
-		_ = c.String(400, "Could not get player debt!")
-		return err
+		return fmt.Errorf("could not get debt for player (id:%v): %w", pId, err)
 	}
 
 	newAmount := currentDebt.Amount + amount
 	if newAmount < 0 {
-		_ = c.String(400, "Debt cannot be negative!")
-		return errors.New("debt cannot be negative")
+		return ErrDebtNegative
 	}
 	if newAmount > 1_000_000 {
-		_ = c.String(400, "Debt cannot be more than 1_000_000")
-		return errors.New("debt cannot be more than 1_000_000")
+		return ErrDebtTooHigh
 	}
 	_, err = q.UpdateDebt(context.Background(), db.UpdateDebtParams{
 		Amount: currentDebt.Amount + amount,
@@ -172,9 +134,7 @@ func addDebtToPlayer(name string, amount int64, c echo.Context) error {
 		},
 	})
 	if err != nil {
-		log.Error().Msgf("could not set debt for player %s(id:%v): %s", name, pId, err)
-		_ = c.String(400, "Could not set player debt!")
-		return err
+		return fmt.Errorf("could not set debt for player (id:%v): %w", pId, err)
 	}
 	return nil
 }
