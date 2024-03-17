@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"scurvy10k/internal/models"
 	"scurvy10k/internal/utils"
-	"scurvy10k/sql/db"
+	sqlc "scurvy10k/sql/gen"
 	frontend "scurvy10k/templ"
 	"strconv"
 	"strings"
@@ -58,7 +58,7 @@ func allDebts() ([]models.PlayerDebt, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not get db connection: %w", err)
 	}
-	q := db.New(conn)
+	q := sqlc.New(conn)
 	dbDebts, err := q.AllPlayerDebts(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("could not get all player debts: %w", err)
@@ -106,7 +106,7 @@ func addDebtToPlayer(name string, amount int64) error {
 		_ = conn.Close(ctx)
 	}(conn, context.Background())
 
-	q := db.New(conn)
+	q := sqlc.New(conn)
 	pId, err := q.GetIdOfPlayer(context.Background(), name)
 	if err != nil {
 		return fmt.Errorf("could not get player id for %s: %w", name, err)
@@ -126,7 +126,7 @@ func addDebtToPlayer(name string, amount int64) error {
 	if newAmount > 1_000_000 {
 		return ErrDebtTooHigh
 	}
-	_, err = q.UpdateDebt(context.Background(), db.UpdateDebtParams{
+	_, err = q.UpdateDebt(context.Background(), sqlc.UpdateDebtParams{
 		Amount: currentDebt.Amount + amount,
 		UserID: pgtype.Int4{
 			Int32: pId,

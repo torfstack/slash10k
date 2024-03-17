@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"scurvy10k/internal/utils"
-	"scurvy10k/sql/db"
+	"scurvy10k/sql/gen"
 )
 
 func AddPlayer(c echo.Context) error {
@@ -26,7 +26,7 @@ func AddPlayer(c echo.Context) error {
 		_ = conn.Close(ctx)
 	}(conn, context.Background())
 
-	q := db.New(conn)
+	q := sqlc.New(conn)
 
 	count, err := q.NumberOfPlayers(context.Background())
 	if err != nil {
@@ -42,7 +42,7 @@ func AddPlayer(c echo.Context) error {
 		log.Err(err).Msg("could not add player!")
 		return c.String(500, "Could not add player!")
 	}
-	_, err = q.SetDebt(context.Background(), db.SetDebtParams{
+	_, err = q.SetDebt(context.Background(), sqlc.SetDebtParams{
 		Amount: 0,
 		UserID: pgtype.Int4{
 			Int32: p.ID,

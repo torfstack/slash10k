@@ -7,7 +7,7 @@ tmp_dir = "tmp"
   bin = "./bin/main"
   cmd = "sqlc generate && templ generate && go build -ldflags \"-X main.adminPw=disabled\" -o ./bin/main ./cmd/server/main.go"
   delay = 1000
-  exclude_dir = ["assets", "tmp", "vendor", "testdata", "sql/db"]
+  exclude_dir = ["assets", "tmp", "vendor", "testdata", "sql/gen"]
   exclude_file = []
   exclude_regex = [".*_templ.go", ".*_test.go"]
   exclude_unchanged = false
