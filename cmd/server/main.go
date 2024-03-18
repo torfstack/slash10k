@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"os"
 	"scurvy10k/internal/db"
 	"scurvy10k/internal/handler"
+	"scurvy10k/internal/utils"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -15,6 +17,12 @@ import (
 
 func main() {
 	setupLogger()
+
+	err := db.Migrate(context.Background(), utils.DefaultConfig().ConnectionString)
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not run database migrations")
+		return
+	}
 
 	d := db.NewDatabase()
 
