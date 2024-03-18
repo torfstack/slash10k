@@ -6,5 +6,6 @@ WORKDIR /opt/scurvy10k
 
 COPY /bin/scurvy10k-server scurvy10k-server
 COPY /assets assets
+COPY /sql/migrations sql/migrations
 
 CMD ["./scurvy10k-server"]

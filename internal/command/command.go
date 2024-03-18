@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/jackc/pgx/v5"
 	"io"
 	"net/http"
 	"os"
 	"scurvy10k/internal/models"
 	"scurvy10k/internal/utils"
-	"scurvy10k/sql/db"
+	sqlc "scurvy10k/sql/gen"
 	"slices"
 	"strings"
 
@@ -42,13 +43,17 @@ func Setup() {
 		return
 	}
 	torfstackId = discord.UserID(userId)
-	conn, err := utils.GetConnection(utils.DefaultConfig())
+
+	conn, err := utils.GetConnection(context.Background(), utils.DefaultConfig())
 	if err != nil {
 		log.Error().Msgf("cannot get db connection: %s", err)
 		return
 	}
-	defer conn.Close(context.Background())
-	q := db.New(conn)
+	defer func(conn *pgx.Conn, ctx context.Context) {
+		_ = conn.Close(ctx)
+	}(conn, context.Background())
+
+	q := sqlc.New(conn)
 	setup, err := q.GetBotSetup(context.Background())
 	if err != nil {
 		log.Error().Msgf("cannot get bot setup: %s", err)
@@ -79,7 +84,9 @@ func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 			log.Error().Msgf("could not send debt post request: %s", err)
 			return ephemeralMessage("Could not update debt")
 		}
-		defer res.Body.Close()
+		defer func(Body io.ReadCloser) {
+			_ = Body.Close()
+		}(res.Body)
 		if res.StatusCode != http.StatusOK {
 			log.Error().Msgf("debt post request was not successful: %s", res.Status)
 			return ephemeralMessage("Could not update debt")
@@ -119,14 +126,16 @@ func SetChannel(s *state.State) func(ctx context.Context, data cmdroute.CommandD
 			return ephemeralMessage("Could not send message")
 		}
 		messageId = m.ID
-		conn, err := utils.GetConnection(utils.DefaultConfig())
+		conn, err := utils.GetConnection(context.Background(), utils.DefaultConfig())
 		if err != nil {
 			log.Error().Msgf("cannot get db connection: %s", err)
 			return ephemeralMessage("Could not get db connection")
 		}
-		defer conn.Close(ctx)
-		q := db.New(conn)
-		_, err = q.PutBotSetup(ctx, db.PutBotSetupParams{
+		defer func(conn *pgx.Conn, ctx context.Context) {
+			_ = conn.Close(ctx)
+		}(conn, ctx)
+		q := sqlc.New(conn)
+		_, err = q.PutBotSetup(ctx, sqlc.PutBotSetupParams{
 			ChannelID: channelId.String(),
 			MessageID: messageId.String(),
 		})
@@ -143,7 +152,9 @@ func getDebts() (*models.AllDebtsResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	bytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
