@@ -4,12 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	"io"
 	"net/http"
 	"os"
+	"scurvy10k/internal/db"
 	"scurvy10k/internal/models"
-	"scurvy10k/internal/utils"
 	sqlc "scurvy10k/sql/gen"
 	"slices"
 	"strings"
@@ -36,7 +35,7 @@ var (
 	messageId   discord.MessageID
 )
 
-func Setup() {
+func Setup(ctx context.Context, d db.Database) {
 	userId, err := discord.ParseSnowflake("263352209654153236")
 	if err != nil {
 		log.Error().Msgf("cannot parse torfstack id: %s", err)
@@ -44,17 +43,16 @@ func Setup() {
 	}
 	torfstackId = discord.UserID(userId)
 
-	conn, err := utils.GetConnection(context.Background(), utils.DefaultConfig())
+	conn, err := d.Connect(ctx)
 	if err != nil {
 		log.Error().Msgf("cannot get db connection: %s", err)
 		return
 	}
-	defer func(conn *pgx.Conn, ctx context.Context) {
+	defer func(conn db.Connection, ctx context.Context) {
 		_ = conn.Close(ctx)
 	}(conn, context.Background())
 
-	q := sqlc.New(conn)
-	setup, err := q.GetBotSetup(context.Background())
+	setup, err := conn.GetBotSetup(context.Background())
 	if err != nil {
 		log.Error().Msgf("cannot get bot setup: %s", err)
 		return
@@ -101,7 +99,7 @@ func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 	}
 }
 
-func SetChannel(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+func SetChannel(s *state.State, d db.Database) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 		if data.Event.SenderID() != torfstackId {
 			log.Error().Msgf("cannot set channel: not torfstack, got %v", data.Event.SenderID())
@@ -120,22 +118,21 @@ func SetChannel(s *state.State) func(ctx context.Context, data cmdroute.CommandD
 			log.Error().Msgf("cannot get debts: %s", err)
 			return ephemeralMessage("Could not get debts")
 		}
-		m, err := s.SendMessage(discord.ChannelID(channelId), "", *transformDebtsToEmbed(debts))
+		m, err := s.SendMessage(channelId, "", *transformDebtsToEmbed(debts))
 		if err != nil {
 			log.Error().Msgf("cannot send message: %s", err)
 			return ephemeralMessage("Could not send message")
 		}
 		messageId = m.ID
-		conn, err := utils.GetConnection(context.Background(), utils.DefaultConfig())
+		conn, err := d.Connect(ctx)
 		if err != nil {
 			log.Error().Msgf("cannot get db connection: %s", err)
 			return ephemeralMessage("Could not get db connection")
 		}
-		defer func(conn *pgx.Conn, ctx context.Context) {
+		defer func(conn db.Connection, ctx context.Context) {
 			_ = conn.Close(ctx)
 		}(conn, ctx)
-		q := sqlc.New(conn)
-		_, err = q.PutBotSetup(ctx, sqlc.PutBotSetupParams{
+		err = conn.PutBotSetup(ctx, sqlc.PutBotSetupParams{
 			ChannelID: channelId.String(),
 			MessageID: messageId.String(),
 		})

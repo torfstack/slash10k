@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"scurvy10k/internal/command"
+	"scurvy10k/internal/db"
 	"strings"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -31,14 +32,15 @@ func main() {
 	setupLogger()
 
 	r := cmdroute.NewRouter()
+	d := db.NewDatabase()
 
 	s := state.New("Bot " + os.Getenv("DISCORD_TOKEN"))
 	s.AddInteractionHandler(r)
 	s.AddIntents(gateway.IntentGuilds)
 	s.AddIntents(gateway.IntentMessageContent)
 
-	command.Setup()
-	r.AddFunc("10kup", command.SetChannel(s))
+	command.Setup(context.Background(), d)
+	r.AddFunc("10kup", command.SetChannel(s, d))
 	r.AddFunc("10k", command.AddDebt(s))
 
 	if err := cmdroute.OverwriteCommands(s, commands); err != nil {

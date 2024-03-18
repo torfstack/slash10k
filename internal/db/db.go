@@ -24,6 +24,9 @@ type Connection interface {
 	GetDebt(ctx context.Context, id int32) (*sqlc.Debt, error)
 	SetDebt(ctx context.Context, params sqlc.SetDebtParams) error
 	UpdateDebt(ctx context.Context, params sqlc.UpdateDebtParams) error
+
+	GetBotSetup(ctx context.Context) (*sqlc.BotSetup, error)
+	PutBotSetup(ctx context.Context, params sqlc.PutBotSetupParams) error
 }
 
 type database struct {
@@ -102,6 +105,22 @@ func (c connection) SetDebt(ctx context.Context, params sqlc.SetDebtParams) erro
 
 func (c connection) UpdateDebt(ctx context.Context, params sqlc.UpdateDebtParams) error {
 	_, err := sqlc.New(c.conn).UpdateDebt(ctx, params)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c connection) GetBotSetup(ctx context.Context) (*sqlc.BotSetup, error) {
+	botSetup, err := sqlc.New(c.conn).GetBotSetup(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &botSetup, nil
+}
+
+func (c connection) PutBotSetup(ctx context.Context, params sqlc.PutBotSetupParams) error {
+	_, err := sqlc.New(c.conn).PutBotSetup(ctx, params)
 	if err != nil {
 		return err
 	}
