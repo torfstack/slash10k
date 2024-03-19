@@ -104,6 +104,9 @@ func AddDebt(d db.Database) func(c echo.Context) error {
 			log.Err(err).Msg("could not get db connection!")
 			return c.String(500, "could not get db connection!")
 		}
+		defer func(conn db.Connection, ctx context.Context) {
+			_ = conn.Close(ctx)
+		}(conn, ctx)
 
 		err = addDebtToPlayer(ctx, conn, name, amount)
 		if err != nil {

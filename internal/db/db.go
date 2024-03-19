@@ -9,6 +9,8 @@ import (
 	sqlc "scurvy10k/sql/gen"
 )
 
+//go:generate mockgen -destination=../mocks/db_mocks.go -package=mock_db scurvy10k/internal/db Database,Connection,Queries
+
 type Database interface {
 	Connect(ctx context.Context) (Connection, error)
 }
