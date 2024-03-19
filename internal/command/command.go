@@ -52,7 +52,7 @@ func Setup(ctx context.Context, d db.Database) {
 		_ = conn.Close(ctx)
 	}(conn, context.Background())
 
-	setup, err := conn.GetBotSetup(context.Background())
+	setup, err := conn.Queries().GetBotSetup(context.Background())
 	if err != nil {
 		log.Error().Msgf("cannot get bot setup: %s", err)
 		return
@@ -132,7 +132,7 @@ func SetChannel(s *state.State, d db.Database) func(ctx context.Context, data cm
 		defer func(conn db.Connection, ctx context.Context) {
 			_ = conn.Close(ctx)
 		}(conn, ctx)
-		err = conn.PutBotSetup(ctx, sqlc.PutBotSetupParams{
+		_, err = conn.Queries().PutBotSetup(ctx, sqlc.PutBotSetupParams{
 			ChannelID: channelId.String(),
 			MessageID: messageId.String(),
 		})

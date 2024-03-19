@@ -26,7 +26,7 @@ func AddPlayer(d db.Database) func(c echo.Context) error {
 			_ = conn.Close(ctx)
 		}(conn, context.Background())
 
-		count, err := conn.NumberOfPlayers(context.Background())
+		count, err := conn.Queries().NumberOfPlayers(context.Background())
 		if err != nil {
 			log.Err(err).Msg("could not get number of players!")
 			return c.String(500, "could not get number of players!")
@@ -35,12 +35,12 @@ func AddPlayer(d db.Database) func(c echo.Context) error {
 			return c.String(400, "Max number of players reached!")
 		}
 
-		p, err := conn.AddPlayer(context.Background(), name)
+		p, err := conn.Queries().AddPlayer(context.Background(), name)
 		if err != nil {
 			log.Err(err).Msg("could not add player!")
 			return c.String(500, "Could not add player!")
 		}
-		err = conn.SetDebt(context.Background(), sqlc.SetDebtParams{
+		_, err = conn.Queries().SetDebt(context.Background(), sqlc.SetDebtParams{
 			Amount: 0,
 			UserID: pgtype.Int4{
 				Int32: p.ID,

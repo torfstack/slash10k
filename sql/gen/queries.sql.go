@@ -53,13 +53,13 @@ func (q *Queries) AddPlayer(ctx context.Context, lower string) (Player, error) {
 	return i, err
 }
 
-const allPlayerDebts = `-- name: AllPlayerDebts :many
+const getAllDebts = `-- name: GetAllDebts :many
 SELECT p.id, name, d.id, amount, last_updated, user_id FROM player p
 JOIN debt d ON p.id = d.user_id
 ORDER BY d.amount DESC, upper(p.name)
 `
 
-type AllPlayerDebtsRow struct {
+type GetAllDebtsRow struct {
 	ID          int32
 	Name        string
 	ID_2        int32
@@ -68,15 +68,15 @@ type AllPlayerDebtsRow struct {
 	UserID      pgtype.Int4
 }
 
-func (q *Queries) AllPlayerDebts(ctx context.Context) ([]AllPlayerDebtsRow, error) {
-	rows, err := q.db.Query(ctx, allPlayerDebts)
+func (q *Queries) GetAllDebts(ctx context.Context) ([]GetAllDebtsRow, error) {
+	rows, err := q.db.Query(ctx, getAllDebts)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []AllPlayerDebtsRow
+	var items []GetAllDebtsRow
 	for rows.Next() {
-		var i AllPlayerDebtsRow
+		var i GetAllDebtsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,

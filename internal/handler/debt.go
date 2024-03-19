@@ -68,7 +68,7 @@ func allDebtsRespond(c echo.Context, conn db.Connection) error {
 }
 
 func allDebts(conn db.Connection, ctx context.Context) ([]models.PlayerDebt, error) {
-	dbDebts, err := conn.GetAllDebts(ctx)
+	dbDebts, err := conn.Queries().GetAllDebts(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("could not get all player debts: %w", err)
 	}
@@ -116,11 +116,11 @@ func AddDebt(d db.Database) func(c echo.Context) error {
 }
 
 func addDebtToPlayer(ctx context.Context, conn db.Connection, name string, amount int64) error {
-	pId, err := conn.GetIdOfPlayer(ctx, name)
+	pId, err := conn.Queries().GetIdOfPlayer(ctx, name)
 	if err != nil {
 		return fmt.Errorf("could not get player id for %s: %w", name, err)
 	}
-	currentDebt, err := conn.GetDebt(ctx, pId)
+	currentDebt, err := conn.Queries().GetDebt(ctx, db.IdType(pId))
 	if err != nil {
 		return fmt.Errorf("could not get debt for player (id:%v): %w", pId, err)
 	}
@@ -132,7 +132,7 @@ func addDebtToPlayer(ctx context.Context, conn db.Connection, name string, amoun
 	if newAmount > 1_000_000 {
 		return ErrDebtTooHigh
 	}
-	err = conn.UpdateDebt(ctx, sqlc.UpdateDebtParams{
+	_, err = conn.Queries().UpdateDebt(ctx, sqlc.UpdateDebtParams{
 		Amount: currentDebt.Amount + amount,
 		UserID: pgtype.Int4{
 			Int32: pId,
