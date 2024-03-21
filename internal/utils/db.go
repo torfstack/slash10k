@@ -8,9 +8,8 @@ import (
 	"slash10k/internal/config"
 )
 
-func GetConnection(ctx context.Context, config config.Config) (*pgx.Conn, error) {
-	s := config.ConnectionString
-	return pgx.Connect(ctx, s)
+func GetConnection(ctx context.Context, connectionString string) (*pgx.Conn, error) {
+	return pgx.Connect(ctx, connectionString)
 }
 
 func DefaultConfig() config.Config {

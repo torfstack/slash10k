@@ -43,18 +43,18 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 }
 
 // Connect mocks base method.
-func (m *MockDatabase) Connect(arg0 context.Context) (db.Connection, error) {
+func (m *MockDatabase) Connect(arg0 context.Context, arg1 string) (db.Connection, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Connect", arg0)
+	ret := m.ctrl.Call(m, "Connect", arg0, arg1)
 	ret0, _ := ret[0].(db.Connection)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Connect indicates an expected call of Connect.
-func (mr *MockDatabaseMockRecorder) Connect(arg0 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) Connect(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connect", reflect.TypeOf((*MockDatabase)(nil).Connect), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connect", reflect.TypeOf((*MockDatabase)(nil).Connect), arg0, arg1)
 }
 
 // MockConnection is a mock of Connection interface.
@@ -129,6 +129,20 @@ func NewMockQueries(ctrl *gomock.Controller) *MockQueries {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockQueries) EXPECT() *MockQueriesMockRecorder {
 	return m.recorder
+}
+
+// AddJournalEntry mocks base method.
+func (m *MockQueries) AddJournalEntry(arg0 context.Context, arg1 sqlc.AddJournalEntryParams) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddJournalEntry", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddJournalEntry indicates an expected call of AddJournalEntry.
+func (mr *MockQueriesMockRecorder) AddJournalEntry(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddJournalEntry", reflect.TypeOf((*MockQueries)(nil).AddJournalEntry), arg0, arg1)
 }
 
 // AddPlayer mocks base method.
@@ -206,6 +220,21 @@ func (mr *MockQueriesMockRecorder) GetIdOfPlayer(arg0, arg1 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIdOfPlayer", reflect.TypeOf((*MockQueries)(nil).GetIdOfPlayer), arg0, arg1)
 }
 
+// GetJournalEntries mocks base method.
+func (m *MockQueries) GetJournalEntries(arg0 context.Context, arg1 pgtype.Int4) ([]sqlc.DebtJournal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetJournalEntries", arg0, arg1)
+	ret0, _ := ret[0].([]sqlc.DebtJournal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetJournalEntries indicates an expected call of GetJournalEntries.
+func (mr *MockQueriesMockRecorder) GetJournalEntries(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetJournalEntries", reflect.TypeOf((*MockQueries)(nil).GetJournalEntries), arg0, arg1)
+}
+
 // NumberOfPlayers mocks base method.
 func (m *MockQueries) NumberOfPlayers(arg0 context.Context) (int64, error) {
 	m.ctrl.T.Helper()
@@ -237,31 +266,15 @@ func (mr *MockQueriesMockRecorder) PutBotSetup(arg0, arg1 any) *gomock.Call {
 }
 
 // SetDebt mocks base method.
-func (m *MockQueries) SetDebt(arg0 context.Context, arg1 sqlc.SetDebtParams) (sqlc.Debt, error) {
+func (m *MockQueries) SetDebt(arg0 context.Context, arg1 sqlc.SetDebtParams) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SetDebt", arg0, arg1)
-	ret0, _ := ret[0].(sqlc.Debt)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // SetDebt indicates an expected call of SetDebt.
 func (mr *MockQueriesMockRecorder) SetDebt(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDebt", reflect.TypeOf((*MockQueries)(nil).SetDebt), arg0, arg1)
-}
-
-// UpdateDebt mocks base method.
-func (m *MockQueries) UpdateDebt(arg0 context.Context, arg1 sqlc.UpdateDebtParams) (sqlc.Debt, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateDebt", arg0, arg1)
-	ret0, _ := ret[0].(sqlc.Debt)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateDebt indicates an expected call of UpdateDebt.
-func (mr *MockQueriesMockRecorder) UpdateDebt(arg0, arg1 any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateDebt", reflect.TypeOf((*MockQueries)(nil).UpdateDebt), arg0, arg1)
 }

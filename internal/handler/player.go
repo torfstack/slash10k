@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
 	"slash10k/internal/db"
+	"slash10k/internal/utils"
 	"slash10k/sql/gen"
 )
 
@@ -17,7 +18,7 @@ func AddPlayer(d db.Database) func(c echo.Context) error {
 			return c.String(400, "name is required!")
 		}
 
-		conn, err := d.Connect(c.Request().Context())
+		conn, err := d.Connect(c.Request().Context(), utils.DefaultConfig().ConnectionString)
 		if err != nil {
 			log.Err(err).Msg("could not get db connection!")
 			return c.String(500, "could not get db connection!")
@@ -40,7 +41,7 @@ func AddPlayer(d db.Database) func(c echo.Context) error {
 			log.Err(err).Msg("could not add player!")
 			return c.String(500, "Could not add player!")
 		}
-		_, err = conn.Queries().SetDebt(context.Background(), sqlc.SetDebtParams{
+		err = conn.Queries().SetDebt(context.Background(), sqlc.SetDebtParams{
 			Amount: 0,
 			UserID: pgtype.Int4{
 				Int32: p.ID,

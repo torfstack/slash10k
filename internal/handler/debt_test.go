@@ -43,7 +43,7 @@ func TestAddDebt(t *testing.T) {
 						UserID: db.IdType(1),
 					}, nil)
 				q.EXPECT().
-					UpdateDebt(gomock.Any(), sqlc.UpdateDebtParams{
+					SetDebt(gomock.Any(), sqlc.SetDebtParams{
 						Amount: 30000,
 						UserID: db.IdType(1),
 					})
@@ -71,7 +71,7 @@ func TestAddDebt(t *testing.T) {
 						UserID: db.IdType(2),
 					}, nil)
 				q.EXPECT().
-					UpdateDebt(gomock.Any(), sqlc.UpdateDebtParams{
+					SetDebt(gomock.Any(), sqlc.SetDebtParams{
 						Amount: 50000,
 						UserID: db.IdType(2),
 					})

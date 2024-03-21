@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"slash10k/internal/db"
 	"slash10k/internal/models"
+	"slash10k/internal/utils"
 	sqlc "slash10k/sql/gen"
 	frontend "slash10k/templ"
 	"strconv"
@@ -29,7 +30,7 @@ var (
 func AllDebts(d db.Database) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
-		conn, err := d.Connect(ctx)
+		conn, err := d.Connect(ctx, utils.DefaultConfig().ConnectionString)
 		defer func(conn db.Connection, ctx context.Context) {
 			_ = conn.Close(ctx)
 		}(conn, ctx)
@@ -99,7 +100,7 @@ func AddDebt(d db.Database) func(c echo.Context) error {
 		}
 
 		ctx := c.Request().Context()
-		conn, err := d.Connect(ctx)
+		conn, err := d.Connect(ctx, utils.DefaultConfig().ConnectionString)
 		if err != nil {
 			log.Err(err).Msg("could not get db connection!")
 			return c.String(500, "could not get db connection!")
@@ -135,7 +136,7 @@ func addDebtToPlayer(ctx context.Context, conn db.Connection, name string, amoun
 	if newAmount > 1_000_000 {
 		return ErrDebtTooHigh
 	}
-	_, err = conn.Queries().UpdateDebt(ctx, sqlc.UpdateDebtParams{
+	err = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{
 		Amount: currentDebt.Amount + amount,
 		UserID: pgtype.Int4{
 			Int32: pId,

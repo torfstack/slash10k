@@ -2,25 +2,23 @@
 SELECT * FROM debt
 WHERE user_id = $1 LIMIT 1;
 
--- name: SetDebt :one
-INSERT INTO debt (
-    amount, user_id
-) VALUES (
-    $1, $2
-) RETURNING *;
+-- name: SetDebt :exec
+INSERT INTO debt (amount, user_id)
+VALUES ($1, $2)
+ON CONFLICT (user_id)
+DO UPDATE SET amount = $1, last_updated = now()
+WHERE debt.user_id = $2;
 
--- name: UpdateDebt :one
-UPDATE debt
-SET amount = $1, last_updated = now()
-WHERE user_id = $2
-RETURNING *;
-
--- name: AddDebtJournalEntry :one
+-- name: AddJournalEntry :exec
 INSERT INTO debt_journal (
     amount, description, user_id
 ) VALUES (
     $1, $2, $3
-) RETURNING *;
+);
+
+-- name: GetJournalEntries :many
+SELECT * FROM debt_journal
+WHERE user_id = $1;
 
 -- name: AddPlayer :one
 INSERT INTO player (

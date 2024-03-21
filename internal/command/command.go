@@ -9,6 +9,7 @@ import (
 	"os"
 	"slash10k/internal/db"
 	"slash10k/internal/models"
+	"slash10k/internal/utils"
 	sqlc "slash10k/sql/gen"
 	"slices"
 	"strings"
@@ -43,7 +44,7 @@ func Setup(ctx context.Context, d db.Database) {
 	}
 	torfstackId = discord.UserID(userId)
 
-	conn, err := d.Connect(ctx)
+	conn, err := d.Connect(ctx, utils.DefaultConfig().ConnectionString)
 	if err != nil {
 		log.Error().Msgf("cannot get db connection: %s", err)
 		return
@@ -124,7 +125,7 @@ func SetChannel(s *state.State, d db.Database) func(ctx context.Context, data cm
 			return ephemeralMessage("Could not send message")
 		}
 		messageId = m.ID
-		conn, err := d.Connect(ctx)
+		conn, err := d.Connect(ctx, utils.DefaultConfig().ConnectionString)
 		if err != nil {
 			log.Error().Msgf("cannot get db connection: %s", err)
 			return ephemeralMessage("Could not get db connection")

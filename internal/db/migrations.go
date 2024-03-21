@@ -27,6 +27,9 @@ func Migrate(ctx context.Context, connectionString string) error {
 	if err != nil {
 		return fmt.Errorf("could not open db connection: %w", err)
 	}
+	defer func(db *sql.DB) {
+		_ = db.Close()
+	}(db)
 
 	if _, err = os.Stat(MigrationsDir); errors.Is(err, os.ErrNotExist) {
 		return ErrMigrationDirNotExist

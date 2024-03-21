@@ -12,7 +12,7 @@ import (
 //go:generate mockgen -destination=../mocks/db_mocks.go -package=mock_db slash10k/internal/db Database,Connection,Queries
 
 type Database interface {
-	Connect(ctx context.Context) (Connection, error)
+	Connect(ctx context.Context, connectionString string) (Connection, error)
 }
 
 type Connection interface {
@@ -27,8 +27,9 @@ type Queries interface {
 
 	GetAllDebts(ctx context.Context) ([]sqlc.GetAllDebtsRow, error)
 	GetDebt(ctx context.Context, id pgtype.Int4) (sqlc.Debt, error)
-	SetDebt(ctx context.Context, params sqlc.SetDebtParams) (sqlc.Debt, error)
-	UpdateDebt(ctx context.Context, params sqlc.UpdateDebtParams) (sqlc.Debt, error)
+	SetDebt(ctx context.Context, params sqlc.SetDebtParams) error
+	AddJournalEntry(ctx context.Context, params sqlc.AddJournalEntryParams) error
+	GetJournalEntries(ctx context.Context, id pgtype.Int4) ([]sqlc.DebtJournal, error)
 
 	GetBotSetup(ctx context.Context) (sqlc.BotSetup, error)
 	PutBotSetup(ctx context.Context, params sqlc.PutBotSetupParams) (sqlc.BotSetup, error)
@@ -41,8 +42,8 @@ func NewDatabase() Database {
 	return &database{}
 }
 
-func (d database) Connect(ctx context.Context) (Connection, error) {
-	conn, err := utils.GetConnection(ctx, utils.DefaultConfig())
+func (d database) Connect(ctx context.Context, connectionString string) (Connection, error) {
+	conn, err := utils.GetConnection(ctx, connectionString)
 	if err != nil {
 		return nil, fmt.Errorf("could not establish db connection: %w", err)
 	}
