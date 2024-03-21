@@ -6,8 +6,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log"
-	"scurvy10k/internal/db"
-	"scurvy10k/sql/gen"
+	"slash10k/internal/db"
+	"slash10k/sql/gen"
 )
 
 func AddPlayer(d db.Database) func(c echo.Context) error {

@@ -5,7 +5,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/rs/zerolog/log"
 	"os"
-	"scurvy10k/internal/config"
+	"slash10k/internal/config"
 )
 
 func GetConnection(ctx context.Context, config config.Config) (*pgx.Conn, error) {

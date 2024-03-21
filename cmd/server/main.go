@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"os"
-	"scurvy10k/internal/db"
-	"scurvy10k/internal/handler"
-	"scurvy10k/internal/utils"
+	"slash10k/internal/db"
+	"slash10k/internal/handler"
+	"slash10k/internal/utils"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -86,5 +86,5 @@ func setupLogger() {
 	log.Logger = log.Output(output)
 }
 
-// go build -ldflags "-X main.adminPwDisabled=disabled" -o scurvy10k
+// go build -ldflags "-X main.adminPwDisabled=disabled" -o slash10k
 var adminPw string

@@ -1,6 +1,6 @@
-module scurvy10k
+module slash10k
 
-go 1.22.0
+go 1.22.1
 
 require (
 	github.com/a-h/templ v0.2.543
@@ -9,6 +9,7 @@ require (
 	github.com/labstack/echo/v4 v4.11.4
 	github.com/pressly/goose/v3 v3.19.2
 	github.com/rs/zerolog v1.32.0
+	go.uber.org/mock v0.4.0
 	golang.org/x/text v0.14.0
 	golang.org/x/time v0.5.0
 )
@@ -27,7 +28,6 @@ require (
 	github.com/sethvargo/go-retry v0.2.4 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
-	go.uber.org/mock v0.4.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/net v0.22.0 // indirect

@@ -1,9 +1,5 @@
-# Scurvy10k
-Make your WoW mates pay their debts! 
-
-## Uses
-- [Templ](https://github.com/a-h/templ)
-- [sqlc](https://github.com/sqlc-dev/sqlc)
+# /10k
+Track gold debts on discord
 
 ## Build
 
@@ -15,8 +11,14 @@ go install github.com/a-h/templ/cmd/templ@latest
 go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 ```
 
-then run to build
+then run to generate
 
 ```bash
-./do build
+./do gen
+```
+
+run locally via
+
+```angular2html
+go run ./cmd/server/main.go
 ```

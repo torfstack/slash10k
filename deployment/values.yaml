@@ -1,4 +1,4 @@
-appName: "scurvy10k"
+appName: "slash10k"
 namespace: "default"
 port: 3330
 logLevel: "info"
@@ -6,13 +6,13 @@ logLevel: "info"
 database:
   host: "postgresql.default.svc.cluster.local"
   port: 5432
-  user: "scurvy10k"
-  dbname: "scurvy10k"
+  user: "slash10k"
+  dbname: "slash10k"
 
 image:
-  name: ghcr.io/torfstack/scurvy10k
-  tag: 0.1.9
+  name: ghcr.io/torfstack/slash10k
+  tag: 0.1.10
 
 botImage:
-  name: ghcr.io/torfstack/scurvy10k-bot
-  tag: 0.1.9
+  name: ghcr.io/torfstack/slash10k-bot
+  tag: 0.1.10

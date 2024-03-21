@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 	"github.com/labstack/echo/v4"
-	frontend "scurvy10k/templ"
+	frontend "slash10k/templ"
 )
 
 func ServeFrontend(c echo.Context) error {

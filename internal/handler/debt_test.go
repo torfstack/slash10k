@@ -5,10 +5,10 @@ import (
 	"go.uber.org/mock/gomock"
 	"net/http"
 	"net/http/httptest"
-	"scurvy10k/internal/db"
-	mock_db "scurvy10k/internal/mocks"
-	"scurvy10k/internal/testutil"
-	sqlc "scurvy10k/sql/gen"
+	"slash10k/internal/db"
+	mock_db "slash10k/internal/mocks"
+	"slash10k/internal/testutil"
+	sqlc "slash10k/sql/gen"
 	"testing"
 )
 

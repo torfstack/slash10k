@@ -33,12 +33,12 @@ spec:
             - name: DATABASE_CONNECTION_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: scurvy10k
+                  name: slash10k
                   key: db-password
             - name: ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: scurvy10k
+                  name: slash10k
                   key: admin-password
             - name: LOG_LEVEL
               value: {{ .Values.logLevel }}
@@ -56,17 +56,17 @@ spec:
             - name: DATABASE_CONNECTION_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: scurvy10k
+                  name: slash10k
                   key: db-password
             - name: ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: scurvy10k
+                  name: slash10k
                   key: admin-password
             - name: DISCORD_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: scurvy10k
+                  name: slash10k
                   key: discord-token
             - name: VERSION
               value: {{ .Values.botImage.tag }}

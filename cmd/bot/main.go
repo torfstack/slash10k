@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"os"
-	"scurvy10k/internal/command"
-	"scurvy10k/internal/db"
+	"slash10k/internal/command"
+	"slash10k/internal/db"
 	"strings"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -47,7 +47,7 @@ func main() {
 		log.Fatal().Msgf("cannot update commands: %s", err)
 	}
 
-	log.Info().Msg("connecting scurvy10k-bot")
+	log.Info().Msg("connecting slash10k-bot")
 	if err := s.Connect(context.Background()); err != nil {
 		log.Fatal().Msgf("cannot connect: %s", err)
 	}

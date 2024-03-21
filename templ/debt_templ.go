@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
-	"scurvy10k/internal/models"
+	"slash10k/internal/models"
 )
 
 func Debt() templ.Component {

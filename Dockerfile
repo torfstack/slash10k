@@ -1,11 +1,11 @@
 FROM alpine:3.19.1
 
-RUN mkdir /opt/scurvy10k
+RUN mkdir /opt/slash10k
 
-WORKDIR /opt/scurvy10k
+WORKDIR /opt/slash10k
 
-COPY /bin/scurvy10k-server scurvy10k-server
+COPY /bin/slash10k-server slash10k-server
 COPY /assets assets
 COPY /sql/migrations sql/migrations
 
-CMD ["./scurvy10k-server"]
+CMD ["./slash10k-server"]

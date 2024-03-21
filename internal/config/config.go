@@ -1,7 +1,7 @@
 package config
 
 const (
-	DefaultConnectionString = "host=localhost port=5432 user=postgres password=postgres dbname=scurvy10k sslmode=disable"
+	DefaultConnectionString = "host=localhost port=5432 user=postgres password=postgres dbname=slash10k sslmode=disable"
 )
 
 type Config struct {

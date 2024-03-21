@@ -7,9 +7,9 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"scurvy10k/internal/db"
-	"scurvy10k/internal/models"
-	sqlc "scurvy10k/sql/gen"
+	"slash10k/internal/db"
+	"slash10k/internal/models"
+	sqlc "slash10k/sql/gen"
 	"slices"
 	"strings"
 
@@ -180,7 +180,7 @@ func transformDebtsToEmbed(debts *models.AllDebtsResponse) *discord.Embed {
 	return &discord.Embed{
 		Title:       ":moneybag: 10k in die Gildenbank!",
 		Type:        discord.NormalEmbed,
-		Description: "[GitHub](https://github.com/torfstack/scurvy10k) | v" + version,
+		Description: "[GitHub](https://github.com/torfstack/slash10k) | v" + version,
 		Timestamp:   discord.NowTimestamp(),
 		Color:       discord.Color(0xF1C40F),
 		Footer: &discord.EmbedFooter{

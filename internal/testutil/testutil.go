@@ -2,8 +2,8 @@ package testutil
 
 import (
 	"go.uber.org/mock/gomock"
-	"scurvy10k/internal/db"
-	mockdb "scurvy10k/internal/mocks"
+	"slash10k/internal/db"
+	mockdb "slash10k/internal/mocks"
 )
 
 func QueriesMock(c *gomock.Controller) (db.Database, *mockdb.MockQueries) {

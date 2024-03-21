@@ -9,19 +9,19 @@ build() {
 }
 
 build_server() {
-  CGO_ENABLED=0 GOOS=linux go build -o bin/scurvy10k-server cmd/server/main.go
+  CGO_ENABLED=0 GOOS=linux go build -o bin/slash10k-server cmd/server/main.go
   version=$(cat version)
-  echo "Building scurvy10k:$version"
-  docker buildx build . -f Dockerfile -t ghcr.io/torfstack/scurvy10k:"$version"
-  docker push ghcr.io/torfstack/scurvy10k:"$version"
+  echo "Building slash10k:$version"
+  docker buildx build . -f Dockerfile -t ghcr.io/torfstack/slash10k:"$version"
+  docker push ghcr.io/torfstack/slash10k:"$version"
 }
 
 build_bot() {
-  CGO_ENABLED=0 GOOS=linux go build -o bin/scurvy10k-bot cmd/bot/main.go
+  CGO_ENABLED=0 GOOS=linux go build -o bin/slash10k-bot cmd/bot/main.go
   version=$(cat version)
-  echo "Building scurvy10k-bot:$version"
-  docker buildx build . -f Dockerfile-bot -t ghcr.io/torfstack/scurvy10k-bot:"$version"
-  docker push ghcr.io/torfstack/scurvy10k-bot:"$version"
+  echo "Building slash10k-bot:$version"
+  docker buildx build . -f Dockerfile-bot -t ghcr.io/torfstack/slash10k-bot:"$version"
+  docker push ghcr.io/torfstack/slash10k-bot:"$version"
 }
 
 run() {
@@ -31,7 +31,7 @@ run() {
     DATABASE_CONNECTION_PORT=5432 \
     DATABASE_CONNECTION_USER=postgres \
     DATABASE_CONNECTION_PASSWORD=mysecretpassword \
-    DATABASE_CONNECTION_DBNAME=scurvy10k air
+    DATABASE_CONNECTION_DBNAME=slash10k air
 }
 
 gen() {
@@ -80,7 +80,7 @@ start() {
 deploy() {
   check_installed "helm"
   echo "Deploying..."
-  helm upgrade --install scurvy10k deployment --values deployment/values.yaml -f deployment/values.yaml -n default
+  helm upgrade --install slash10k deployment --values deployment/values.yaml -f deployment/values.yaml -n default
 }
 
 check_installed() {

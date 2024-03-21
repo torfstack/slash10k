@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"scurvy10k/internal/utils"
-	sqlc "scurvy10k/sql/gen"
+	"slash10k/internal/utils"
+	sqlc "slash10k/sql/gen"
 )
 
-//go:generate mockgen -destination=../mocks/db_mocks.go -package=mock_db scurvy10k/internal/db Database,Connection,Queries
+//go:generate mockgen -destination=../mocks/db_mocks.go -package=mock_db slash10k/internal/db Database,Connection,Queries
 
 type Database interface {
 	Connect(ctx context.Context) (Connection, error)
