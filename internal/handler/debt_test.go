@@ -52,6 +52,34 @@ func TestAddDebt(t *testing.T) {
 			},
 			wantStatus: http.StatusOK,
 		},
+		{
+			name: "subtracting debt from player 'neruh'",
+			params: []AddDebtTestParam{
+				{
+					Player: "neruh",
+					Amount: "-20000",
+				},
+			},
+			withQueries: func(q *mock_db.MockQueries) {
+				q.EXPECT().
+					GetIdOfPlayer(gomock.Any(), "neruh").
+					Return(int32(2), nil)
+				q.EXPECT().
+					GetDebt(gomock.Any(), gomock.Any()).
+					Return(sqlc.Debt{
+						Amount: 70000,
+						UserID: db.IdType(2),
+					}, nil)
+				q.EXPECT().
+					UpdateDebt(gomock.Any(), sqlc.UpdateDebtParams{
+						Amount: 50000,
+						UserID: db.IdType(2),
+					})
+				q.EXPECT().
+					GetAllDebts(gomock.Any())
+			},
+			wantStatus: http.StatusOK,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
