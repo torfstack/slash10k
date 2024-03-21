@@ -6,13 +6,13 @@ logLevel: "info"
 database:
   host: "postgresql.default.svc.cluster.local"
   port: 5432
-  user: "slash10k"
-  dbname: "slash10k"
+  user: "scurvy10k"
+  dbname: "scurvy10k"
 
 image:
   name: ghcr.io/torfstack/slash10k
-  tag: 0.1.10
+  tag: 0.1.11
 
 botImage:
   name: ghcr.io/torfstack/slash10k-bot
-  tag: 0.1.10
+  tag: 0.1.11
