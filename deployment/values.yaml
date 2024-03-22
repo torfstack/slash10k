@@ -11,8 +11,8 @@ database:
 
 image:
   name: ghcr.io/torfstack/slash10k
-  tag: 0.1.13
+  tag: 0.1.14
 
 botImage:
   name: ghcr.io/torfstack/slash10k-bot
-  tag: 0.1.13
+  tag: 0.1.14
