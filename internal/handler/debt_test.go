@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/mock/gomock"
 	"net/http"
@@ -13,8 +14,9 @@ import (
 )
 
 type AddDebtTestParam struct {
-	Player string
-	Amount string
+	Player      string
+	Amount      string
+	Description string
 }
 
 func TestAddDebt(t *testing.T) {
@@ -53,6 +55,41 @@ func TestAddDebt(t *testing.T) {
 			wantStatus: http.StatusOK,
 		},
 		{
+			name: "adding debt to player 'torfstack' with description",
+			params: []AddDebtTestParam{
+				{
+					Player:      "torfstack",
+					Amount:      "10000",
+					Description: "Trash-AFK",
+				},
+			},
+			withQueries: func(q *mock_db.MockQueries) {
+				q.EXPECT().
+					GetIdOfPlayer(gomock.Any(), "torfstack").
+					Return(int32(1), nil)
+				q.EXPECT().
+					GetDebt(gomock.Any(), gomock.Any()).
+					Return(sqlc.Debt{
+						Amount: 20000,
+						UserID: db.IdType(1),
+					}, nil)
+				q.EXPECT().
+					SetDebt(gomock.Any(), sqlc.SetDebtParams{
+						Amount: 30000,
+						UserID: db.IdType(1),
+					})
+				q.EXPECT().
+					GetAllDebts(gomock.Any())
+				q.EXPECT().
+					AddJournalEntry(gomock.Any(), sqlc.AddJournalEntryParams{
+						Amount:      10000,
+						Description: "Trash-AFK",
+						UserID:      db.IdType(1),
+					})
+			},
+			wantStatus: http.StatusOK,
+		},
+		{
 			name: "subtracting debt from player 'neruh'",
 			params: []AddDebtTestParam{
 				{
@@ -80,6 +117,7 @@ func TestAddDebt(t *testing.T) {
 			},
 			wantStatus: http.StatusOK,
 		},
+		{},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -91,7 +129,14 @@ func TestAddDebt(t *testing.T) {
 
 			e := echo.New()
 			for _, param := range tt.params {
-				req := httptest.NewRequest(http.MethodPost, "/", nil)
+				jsonData := []byte{}
+				if param.Description != "" {
+					jsonData = []byte(`{
+						"description": "` + param.Description + `"
+					}`)
+				}
+				req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(jsonData))
+				req.Header.Add("Content-Type", "application/json")
 				rec := httptest.NewRecorder()
 				ctx := e.NewContext(req, rec)
 				ctx.SetPath("/:player/debt/:amount")

@@ -83,6 +83,10 @@ func allDebts(conn db.Connection, ctx context.Context) ([]models.PlayerDebt, err
 	return debts, nil
 }
 
+type AddDebtParams struct {
+	Description string `json:"description,omitempty" required:"false"`
+}
+
 func AddDebt(d db.Database) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		name := c.Param("player")
@@ -99,6 +103,11 @@ func AddDebt(d db.Database) func(c echo.Context) error {
 			return c.String(400, "amount must be an integer!")
 		}
 
+		var params AddDebtParams
+		if err = c.Bind(&params); err != nil {
+			return c.String(400, "could not bind params")
+		}
+
 		ctx := c.Request().Context()
 		conn, err := d.Connect(ctx, utils.DefaultConfig().ConnectionString)
 		if err != nil {
@@ -109,7 +118,7 @@ func AddDebt(d db.Database) func(c echo.Context) error {
 			_ = conn.Close(ctx)
 		}(conn, ctx)
 
-		err = addDebtToPlayer(ctx, conn, name, amount)
+		err = addDebtToPlayer(ctx, conn, name, amount, params.Description)
 		if err != nil {
 			log.Err(err).Msg("could not add debt to player")
 			return c.String(500, "could not add debt to player")
@@ -119,7 +128,7 @@ func AddDebt(d db.Database) func(c echo.Context) error {
 	}
 }
 
-func addDebtToPlayer(ctx context.Context, conn db.Connection, name string, amount int64) error {
+func addDebtToPlayer(ctx context.Context, conn db.Connection, name string, amount int64, desc string) error {
 	pId, err := conn.Queries().GetIdOfPlayer(ctx, name)
 	if err != nil {
 		return fmt.Errorf("could not get player id for %s: %w", name, err)
@@ -143,6 +152,41 @@ func addDebtToPlayer(ctx context.Context, conn db.Connection, name string, amoun
 			Valid: true,
 		},
 	})
+
+	if amount > 0 {
+		_, err = conn.Queries().AddJournalEntry(ctx, sqlc.AddJournalEntryParams{
+			Amount:      amount,
+			Description: desc,
+			UserID: pgtype.Int4{
+				Int32: pId,
+				Valid: true,
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("could not add journal entry for player (id:%v): %w", pId, err)
+		}
+	}
+	if amount < 0 {
+		//entries, err := conn.Queries().GetJournalEntries(ctx, db.IdType(pId))
+		//temp := amount
+		//for _, entry := range entries {
+		//
+		//}
+		//
+		//_, err = conn.Queries().UpdateJournalEntry(ctx, sqlc.UpdateJournalEntryParams{
+		//	Amount:      amount,
+		//	Description: desc,
+		//	UserID: pgtype.Int4{
+		//		Int32: pId,
+		//		Valid: true,
+		//	},
+		//})
+		//if err != nil {
+		//	return fmt.Errorf("could not update journal entry for player (id:%v): %w", pId, err)
+		//}
+
+	}
+
 	if err != nil {
 		return fmt.Errorf("could not set debt for player (id:%v): %w", pId, err)
 	}
