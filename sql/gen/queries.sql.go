@@ -11,12 +11,12 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const addJournalEntry = `-- name: AddJournalEntry :exec
+const addJournalEntry = `-- name: AddJournalEntry :one
 INSERT INTO debt_journal (
     amount, description, user_id
 ) VALUES (
     $1, $2, $3
-)
+) RETURNING id, amount, description, date, user_id
 `
 
 type AddJournalEntryParams struct {
@@ -25,9 +25,17 @@ type AddJournalEntryParams struct {
 	UserID      pgtype.Int4
 }
 
-func (q *Queries) AddJournalEntry(ctx context.Context, arg AddJournalEntryParams) error {
-	_, err := q.db.Exec(ctx, addJournalEntry, arg.Amount, arg.Description, arg.UserID)
-	return err
+func (q *Queries) AddJournalEntry(ctx context.Context, arg AddJournalEntryParams) (DebtJournal, error) {
+	row := q.db.QueryRow(ctx, addJournalEntry, arg.Amount, arg.Description, arg.UserID)
+	var i DebtJournal
+	err := row.Scan(
+		&i.ID,
+		&i.Amount,
+		&i.Description,
+		&i.Date,
+		&i.UserID,
+	)
+	return i, err
 }
 
 const addPlayer = `-- name: AddPlayer :one
@@ -206,4 +214,30 @@ type SetDebtParams struct {
 func (q *Queries) SetDebt(ctx context.Context, arg SetDebtParams) error {
 	_, err := q.db.Exec(ctx, setDebt, arg.Amount, arg.UserID)
 	return err
+}
+
+const updateJournalEntry = `-- name: UpdateJournalEntry :one
+UPDATE debt_journal
+SET amount = $1, description = $2
+WHERE id = $3
+RETURNING id, amount, description, date, user_id
+`
+
+type UpdateJournalEntryParams struct {
+	Amount      int64
+	Description string
+	ID          int32
+}
+
+func (q *Queries) UpdateJournalEntry(ctx context.Context, arg UpdateJournalEntryParams) (DebtJournal, error) {
+	row := q.db.QueryRow(ctx, updateJournalEntry, arg.Amount, arg.Description, arg.ID)
+	var i DebtJournal
+	err := row.Scan(
+		&i.ID,
+		&i.Amount,
+		&i.Description,
+		&i.Date,
+		&i.UserID,
+	)
+	return i, err
 }

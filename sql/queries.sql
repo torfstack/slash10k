@@ -9,12 +9,18 @@ ON CONFLICT (user_id)
 DO UPDATE SET amount = $1, last_updated = now()
 WHERE debt.user_id = $2;
 
--- name: AddJournalEntry :exec
+-- name: AddJournalEntry :one
 INSERT INTO debt_journal (
     amount, description, user_id
 ) VALUES (
     $1, $2, $3
-);
+) RETURNING *;
+
+-- name: UpdateJournalEntry :one
+UPDATE debt_journal
+SET amount = $1, description = $2
+WHERE id = $3
+RETURNING *;
 
 -- name: GetJournalEntries :many
 SELECT * FROM debt_journal

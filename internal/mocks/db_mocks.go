@@ -132,11 +132,12 @@ func (m *MockQueries) EXPECT() *MockQueriesMockRecorder {
 }
 
 // AddJournalEntry mocks base method.
-func (m *MockQueries) AddJournalEntry(arg0 context.Context, arg1 sqlc.AddJournalEntryParams) error {
+func (m *MockQueries) AddJournalEntry(arg0 context.Context, arg1 sqlc.AddJournalEntryParams) (sqlc.DebtJournal, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddJournalEntry", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].(sqlc.DebtJournal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // AddJournalEntry indicates an expected call of AddJournalEntry.
@@ -277,4 +278,19 @@ func (m *MockQueries) SetDebt(arg0 context.Context, arg1 sqlc.SetDebtParams) err
 func (mr *MockQueriesMockRecorder) SetDebt(arg0, arg1 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDebt", reflect.TypeOf((*MockQueries)(nil).SetDebt), arg0, arg1)
+}
+
+// UpdateJournalEntry mocks base method.
+func (m *MockQueries) UpdateJournalEntry(arg0 context.Context, arg1 sqlc.UpdateJournalEntryParams) (sqlc.DebtJournal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateJournalEntry", arg0, arg1)
+	ret0, _ := ret[0].(sqlc.DebtJournal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateJournalEntry indicates an expected call of UpdateJournalEntry.
+func (mr *MockQueriesMockRecorder) UpdateJournalEntry(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateJournalEntry", reflect.TypeOf((*MockQueries)(nil).UpdateJournalEntry), arg0, arg1)
 }
