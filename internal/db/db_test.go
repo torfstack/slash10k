@@ -37,11 +37,11 @@ func Test_Connection(t *testing.T) {
 		{
 			name: "can set debt on player and retrieve it",
 			withConnection: func(t *testing.T, conn Connection, ctx context.Context) {
-				p, _ := conn.Queries().AddPlayer(ctx, "torfstack")
-				_ = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{Amount: 30000, UserID: IdType(p.ID)})
-				_ = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{Amount: 50000, UserID: IdType(p.ID)})
-				d, _ := conn.Queries().GetDebt(ctx, IdType(p.ID))
-				if d.Amount != 50000 {
+				p, e := conn.Queries().AddPlayer(ctx, "torfstack")
+				e = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{Amount: 30000, UserID: IdType(p.ID)})
+				e = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{Amount: 50000, UserID: IdType(p.ID)})
+				d, e := conn.Queries().GetDebt(ctx, IdType(p.ID))
+				if d.Amount != 50000 || e != nil {
 					t.Fatalf("Expected debt of 50000, got %d", d.Amount)
 				}
 			},
@@ -97,7 +97,7 @@ func Test_Connection(t *testing.T) {
 				}
 				entries, _ := conn.Queries().GetJournalEntries(ctx, IdType(p.ID))
 				if len(entries) != 5 {
-					t.Fatalf("Expected 4 journal entries, got %d", len(entries))
+					t.Fatalf("Expected 5 journal entries, got %d", len(entries))
 				}
 				for i := range 6 {
 					_ = conn.Queries().AddJournalEntry(ctx, sqlc.AddJournalEntryParams{
@@ -114,37 +114,46 @@ func Test_Connection(t *testing.T) {
 		},
 	}
 
+	ctx := context.Background()
+	cont, err := setupDatabase(t)
+	if err != nil {
+		t.Fatalf("Could not set up database: %s", err)
+		return
+	}
+	err = cont.Snapshot(ctx)
+	if err != nil {
+		t.Fatalf("Could not snapshot database: %s", err)
+	}
+	var connStr string
+	connStr, err = cont.ConnectionString(ctx)
+	if err != nil {
+		t.Fatalf("Could not get connection string: %s", err)
+	}
+	t.Cleanup(func() {
+		err = cont.Terminate(ctx)
+		if err != nil {
+			t.Fatalf("Could not terminate database: %s", err)
+		}
+	})
+
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := context.Background()
-			cont, err := setupDatabase(t)
-			if err != nil {
-				t.Fatalf("Could not set up database: %s", err)
-				return
-			}
 			t.Cleanup(func() {
-				_ = cont.Terminate(ctx)
+				if err = cont.Restore(ctx); err != nil {
+					t.Fatalf("Could not restore database: %s", err)
+				}
 			})
 
-			connStr, err := cont.ConnectionString(ctx)
-			if err != nil {
-				t.Fatalf("Could not get connection string: %s", err)
-			}
 			d := NewDatabase()
-			var conn Connection
-			conn, err = d.Connect(ctx, connStr)
+			conn, err := d.Connect(ctx, connStr)
 			if err != nil {
 				t.Fatalf("Could not get connection: %s", err)
 			}
-			t.Cleanup(func() {
-				_ = conn.Close(ctx)
-				_ = cont.Terminate(ctx)
-			})
+			defer conn.Close(context.Background())
 
 			tc.withConnection(t, conn, ctx)
 		})
 	}
-
 }
 
 func setupDatabase(t *testing.T) (*postgres.PostgresContainer, error) {
@@ -153,8 +162,6 @@ func setupDatabase(t *testing.T) (*postgres.PostgresContainer, error) {
 	postgresContainer, err := postgres.RunContainer(ctx,
 		testcontainers.WithImage("docker.io/postgres:16.2-alpine"),
 		postgres.WithDatabase("test"),
-		postgres.WithUsername("user"),
-		postgres.WithPassword("password"),
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").
 				WithOccurrence(2).
