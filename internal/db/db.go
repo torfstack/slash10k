@@ -28,9 +28,11 @@ type Queries interface {
 	GetAllDebts(ctx context.Context) ([]sqlc.GetAllDebtsRow, error)
 	GetDebt(ctx context.Context, id pgtype.Int4) (sqlc.Debt, error)
 	SetDebt(ctx context.Context, params sqlc.SetDebtParams) error
+
 	AddJournalEntry(ctx context.Context, params sqlc.AddJournalEntryParams) (sqlc.DebtJournal, error)
 	GetJournalEntries(ctx context.Context, id pgtype.Int4) ([]sqlc.DebtJournal, error)
 	UpdateJournalEntry(ctx context.Context, params sqlc.UpdateJournalEntryParams) (sqlc.DebtJournal, error)
+	DeleteJournalEntry(ctx context.Context, id int32) error
 
 	GetBotSetup(ctx context.Context) (sqlc.BotSetup, error)
 	PutBotSetup(ctx context.Context, params sqlc.PutBotSetupParams) (sqlc.BotSetup, error)

@@ -153,7 +153,7 @@ func addDebtToPlayer(ctx context.Context, conn db.Connection, name string, amoun
 		},
 	})
 
-	if amount > 0 {
+	if amount > 0 && desc != "" {
 		_, err = conn.Queries().AddJournalEntry(ctx, sqlc.AddJournalEntryParams{
 			Amount:      amount,
 			Description: desc,
@@ -167,24 +167,27 @@ func addDebtToPlayer(ctx context.Context, conn db.Connection, name string, amoun
 		}
 	}
 	if amount < 0 {
-		//entries, err := conn.Queries().GetJournalEntries(ctx, db.IdType(pId))
-		//temp := amount
-		//for _, entry := range entries {
-		//
-		//}
-		//
-		//_, err = conn.Queries().UpdateJournalEntry(ctx, sqlc.UpdateJournalEntryParams{
-		//	Amount:      amount,
-		//	Description: desc,
-		//	UserID: pgtype.Int4{
-		//		Int32: pId,
-		//		Valid: true,
-		//	},
-		//})
-		//if err != nil {
-		//	return fmt.Errorf("could not update journal entry for player (id:%v): %w", pId, err)
-		//}
-
+		var entries []sqlc.DebtJournal
+		entries, err = conn.Queries().GetJournalEntries(ctx, db.IdType(pId))
+		temp := amount
+		for _, entry := range entries {
+			temp += entry.Amount
+			if temp <= 0 {
+				err = conn.Queries().DeleteJournalEntry(ctx, entry.ID)
+				if err != nil {
+					return fmt.Errorf("could not delete journal entry for player (id:%v): %w", pId, err)
+				}
+			} else {
+				_, err = conn.Queries().UpdateJournalEntry(ctx, sqlc.UpdateJournalEntryParams{
+					Amount:      temp,
+					Description: entry.Description,
+					ID:          entry.ID,
+				})
+				if err != nil {
+					return fmt.Errorf("could not update journal entry for player (id:%v): %w", pId, err)
+				}
+			}
+		}
 	}
 
 	if err != nil {

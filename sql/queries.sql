@@ -22,6 +22,10 @@ SET amount = $1, description = $2
 WHERE id = $3
 RETURNING *;
 
+-- name: DeleteJournalEntry :exec
+DELETE FROM debt_journal
+WHERE id = $1;
+
 -- name: GetJournalEntries :many
 SELECT * FROM debt_journal
 WHERE user_id = $1;
