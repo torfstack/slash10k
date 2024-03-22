@@ -150,7 +150,7 @@ func TestAddDebt(t *testing.T) {
 
 			e := echo.New()
 			for _, param := range tt.params {
-				jsonData := []byte{}
+				var jsonData []byte
 				if param.Description != "" {
 					jsonData = []byte(`{
 						"description": "` + param.Description + `"

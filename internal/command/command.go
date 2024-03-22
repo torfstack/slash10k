@@ -1,6 +1,7 @@
 package command
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -77,8 +78,13 @@ func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 		options := data.Options
 		name := options.Find("name").String()
 		amount := options.Find("amount").String()
+		reason := options.Find("reason").String()
 
-		res, err := http.Post(DebtsUrl+"/"+name+"/"+amount, "application/json", nil)
+		var jsonData []byte
+		if reason != "" {
+			jsonData = []byte(fmt.Sprintf(`{"description": "%s"}`, reason))
+		}
+		res, err := http.Post(DebtsUrl+"/"+name+"/"+amount, "application/json", bytes.NewBuffer(jsonData))
 		if err != nil {
 			log.Error().Msgf("could not send debt post request: %s", err)
 			return ephemeralMessage("Could not update debt")
