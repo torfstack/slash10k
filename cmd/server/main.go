@@ -44,6 +44,8 @@ func main() {
 	api.GET("/debt/:player", handler.GetDebt)
 	api.POST("/debt/:player/:amount", handler.AddDebt(d))
 
+	api.GET("journal/:player", handler.GetJournalEntries(d))
+
 	admin := api.Group("/admin")
 
 	if adminPw == "disabled" {
