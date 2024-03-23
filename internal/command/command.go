@@ -28,8 +28,9 @@ import (
 )
 
 const (
-	BaseUrl  = "https://true.torfstack.com/"
-	DebtsUrl = BaseUrl + "api/debt"
+	BaseUrl    = "https://true.torfstack.com/"
+	DebtsUrl   = BaseUrl + "api/debt"
+	JournalUrl = BaseUrl + "api/journal"
 )
 
 var (
@@ -111,7 +112,7 @@ func GetJournalEntries() func(ctx context.Context, data cmdroute.CommandData) *a
 	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 		options := data.Options
 		name := options.Find("name").String()
-		res, err := http.Get(BaseUrl + "api/journal/" + name)
+		res, err := http.Get(JournalUrl + "/" + name)
 		if err != nil {
 			log.Error().Msgf("could not send journal get request: %s", err)
 			return ephemeralMessage("Could not get journal entries")
@@ -129,14 +130,19 @@ func GetJournalEntries() func(ctx context.Context, data cmdroute.CommandData) *a
 			log.Error().Msgf("cannot decode journal entries: %s", err)
 			return ephemeralMessage("Could not get journal entries")
 		}
+		s, err := journalEntriesString(entries)
+		if err != nil {
+			log.Error().Msgf("cannot get journal entries string: %s", err)
+			return ephemeralMessage("Could not get journal entries")
+		}
 		return &api.InteractionResponseData{
-			Embeds: &[]discord.Embed{*journalEntriesEmbed(entries)},
-			Flags:  discord.EphemeralMessage,
+			Content: option.NewNullableString(s),
+			Flags:   discord.EphemeralMessage,
 		}
 	}
 }
 
-func journalEntriesEmbed(entries models.JournalEntries) *discord.Embed {
+func journalEntriesString(entries models.JournalEntries) (string, error) {
 	maxAmountLength := len(fmt.Sprint(slices.MaxFunc(entries.Entries, func(e1, e2 models.JournalEntry) int {
 		return len(fmt.Sprint(e1.Amount)) - len(fmt.Sprint(e2.Amount))
 	}).Amount))
@@ -145,20 +151,14 @@ func journalEntriesEmbed(entries models.JournalEntries) *discord.Embed {
 	berlin, err := time.LoadLocation("Europe/Berlin")
 	if err != nil {
 		log.Error().Msgf("cannot load location: %s", err)
-		return nil
+		return "", err
 	}
 	for _, entry := range entries.Entries {
 		date := time.Unix(entry.Date, 0).In(berlin).Format(time.RFC822)
 		b.WriteString(fmt.Sprintf("%-*v %s %v\n", maxAmountLength, entry.Amount, entry.Reason, date))
 	}
 	b.WriteString("```")
-	return &discord.Embed{
-		Title:       "10k Tagebuch",
-		Type:        discord.NormalEmbed,
-		Description: b.String(),
-		Timestamp:   discord.NowTimestamp(),
-		Color:       discord.Color(0xF1C40F),
-	}
+	return b.String(), nil
 }
 
 func SetChannel(s *state.State, d db.Database) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
