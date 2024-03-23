@@ -15,6 +15,7 @@ import (
 	"slices"
 	"strings"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/rs/zerolog/log"
 	"golang.org/x/text/cases"
@@ -150,7 +151,6 @@ func journalEntriesString(entries models.JournalEntries) (string, error) {
 	b.WriteString("```")
 	berlin, err := time.LoadLocation("Europe/Berlin")
 	if err != nil {
-		log.Error().Msgf("cannot load location: %s", err)
 		return "", err
 	}
 	for _, entry := range entries.Entries {
