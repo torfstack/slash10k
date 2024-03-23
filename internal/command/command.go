@@ -131,14 +131,19 @@ func GetJournalEntries() func(ctx context.Context, data cmdroute.CommandData) *a
 			log.Error().Msgf("cannot decode journal entries: %s", err)
 			return ephemeralMessage("Could not get journal entries")
 		}
-		s, err := journalEntriesString(entries)
-		if err != nil {
-			log.Error().Msgf("cannot get journal entries string: %s", err)
-			return ephemeralMessage("Could not get journal entries")
-		}
-		return &api.InteractionResponseData{
-			Content: option.NewNullableString(s),
-			Flags:   discord.EphemeralMessage,
+		if len(entries.Entries) > 0 {
+			var s string
+			s, err = journalEntriesString(entries)
+			if err != nil {
+				log.Error().Msgf("cannot get journal entries string: %s", err)
+				return ephemeralMessage("Could not get journal entries")
+			}
+			return &api.InteractionResponseData{
+				Content: option.NewNullableString(s),
+				Flags:   discord.EphemeralMessage,
+			}
+		} else {
+			return ephemeralMessage("No journal entries found")
 		}
 	}
 }
@@ -154,8 +159,8 @@ func journalEntriesString(entries models.JournalEntries) (string, error) {
 		return "", err
 	}
 	for _, entry := range entries.Entries {
-		date := time.Unix(entry.Date, 0).In(berlin).Format(time.RFC822)
-		b.WriteString(fmt.Sprintf("%-*v %s %v\n", maxAmountLength, entry.Amount, entry.Reason, date))
+		date := time.Unix(entry.Date, 0).In(berlin).Format(time.DateTime)
+		b.WriteString(fmt.Sprintf("%-*v || %s || %v\n", maxAmountLength, entry.Amount, entry.Reason, date))
 	}
 	b.WriteString("```")
 	return b.String(), nil
