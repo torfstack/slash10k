@@ -26,6 +26,9 @@ var commands = []api.CreateCommandData{
 		&discord.StringOption{OptionName: "amount", Description: "Betrag, kann negativ sein", Required: true},
 		&discord.StringOption{OptionName: "reason", Description: "Grund", Required: false},
 	}},
+	{Name: "10kwhy", Description: "Warum 10k? (Historie ist limitiert)", Options: discord.CommandOptions{
+		&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
+	}},
 }
 
 func main() {
@@ -42,6 +45,7 @@ func main() {
 	command.Setup(context.Background(), d)
 	r.AddFunc("10kup", command.SetChannel(s, d))
 	r.AddFunc("10k", command.AddDebt(s))
+	r.AddFunc("10kwhy", command.GetJournalEntries())
 
 	if err := cmdroute.OverwriteCommands(s, commands); err != nil {
 		log.Fatal().Msgf("cannot update commands: %s", err)

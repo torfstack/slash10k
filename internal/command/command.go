@@ -14,6 +14,7 @@ import (
 	sqlc "slash10k/sql/gen"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/rs/zerolog/log"
 	"golang.org/x/text/cases"
@@ -103,6 +104,60 @@ func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 			Content: option.NewNullableString(fmt.Sprintf("Added %v to %v", amount, name)),
 			Flags:   discord.EphemeralMessage,
 		}
+	}
+}
+
+func GetJournalEntries() func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+		options := data.Options
+		name := options.Find("name").String()
+		res, err := http.Get(BaseUrl + "api/journal/" + name)
+		if err != nil {
+			log.Error().Msgf("could not send journal get request: %s", err)
+			return ephemeralMessage("Could not get journal entries")
+		}
+		defer func(Body io.ReadCloser) {
+			_ = Body.Close()
+		}(res.Body)
+		if res.StatusCode != http.StatusOK {
+			log.Error().Msgf("journal get request was not successful: %s", res.Status)
+			return ephemeralMessage("Could not get journal entries")
+		}
+
+		var entries models.JournalEntries
+		if err = json.NewDecoder(res.Body).Decode(&entries); err != nil {
+			log.Error().Msgf("cannot decode journal entries: %s", err)
+			return ephemeralMessage("Could not get journal entries")
+		}
+		return &api.InteractionResponseData{
+			Embeds: &[]discord.Embed{*journalEntriesEmbed(entries)},
+			Flags:  discord.EphemeralMessage,
+		}
+	}
+}
+
+func journalEntriesEmbed(entries models.JournalEntries) *discord.Embed {
+	maxAmountLength := len(fmt.Sprint(slices.MaxFunc(entries.Entries, func(e1, e2 models.JournalEntry) int {
+		return len(fmt.Sprint(e1.Amount)) - len(fmt.Sprint(e2.Amount))
+	}).Amount))
+	var b strings.Builder
+	b.WriteString("```")
+	berlin, err := time.LoadLocation("Europe/Berlin")
+	if err != nil {
+		log.Error().Msgf("cannot load location: %s", err)
+		return nil
+	}
+	for _, entry := range entries.Entries {
+		date := time.Unix(entry.Date, 0).In(berlin).Format(time.RFC822)
+		b.WriteString(fmt.Sprintf("%-*v %s %v\n", maxAmountLength, entry.Amount, entry.Reason, date))
+	}
+	b.WriteString("```")
+	return &discord.Embed{
+		Title:       "10k Tagebuch",
+		Type:        discord.NormalEmbed,
+		Description: b.String(),
+		Timestamp:   discord.NowTimestamp(),
+		Color:       discord.Color(0xF1C40F),
 	}
 }
 

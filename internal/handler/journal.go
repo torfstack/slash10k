@@ -6,18 +6,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"slash10k/internal/db"
+	"slash10k/internal/models"
 	"slash10k/internal/utils"
 )
-
-type JournalEntries struct {
-	Entries []JournalEntry `json:"entries"`
-}
-
-type JournalEntry struct {
-	Amount int    `json:"amount"`
-	Reason string `json:"reason"`
-	Date   int64  `json:"date"`
-}
 
 func GetJournalEntries(d db.Database) func(c echo.Context) error {
 	return func(c echo.Context) error {
@@ -45,9 +36,9 @@ func GetJournalEntries(d db.Database) func(c echo.Context) error {
 			return c.String(500, "could not get journal entries")
 		}
 
-		var journalEntries JournalEntries
+		var journalEntries models.JournalEntries
 		for _, entry := range entries {
-			journalEntries.Entries = append(journalEntries.Entries, JournalEntry{
+			journalEntries.Entries = append(journalEntries.Entries, models.JournalEntry{
 				Amount: int(entry.Amount),
 				Reason: entry.Description,
 				Date:   entry.Date.Time.Unix(),
