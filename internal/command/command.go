@@ -13,6 +13,7 @@ import (
 	"slash10k/internal/utils"
 	sqlc "slash10k/sql/gen"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 	_ "time/tzdata"
@@ -83,6 +84,11 @@ func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 		amount := options.Find("amount").String()
 		reason := options.Find("reason").String()
 
+		i, err := strconv.ParseInt(amount, 10, 64)
+		if err != nil || i < 0 {
+			return ephemeralMessage("Amount needs to be a non-negative number!")
+		}
+
 		var jsonData []byte
 		if reason != "" {
 			jsonData = []byte(fmt.Sprintf(`{"description": "%s"}`, reason))
@@ -104,6 +110,39 @@ func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 		}
 		return &api.InteractionResponseData{
 			Content: option.NewNullableString(fmt.Sprintf("Added %v to %v", amount, name)),
+			Flags:   discord.EphemeralMessage,
+		}
+	}
+}
+
+func SubDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+		options := data.Options
+		name := options.Find("name").String()
+		amount := options.Find("amount").String()
+
+		i, err := strconv.ParseInt(amount, 10, 64)
+		if err != nil || i < 0 {
+			return ephemeralMessage("Amount needs to be a non-negative number!")
+		}
+
+		res, err := http.Post(DebtsUrl+"/"+name+"/-"+amount, "application/json", nil)
+		if err != nil {
+			log.Error().Msgf("could not send debt post request: %s", err)
+			return ephemeralMessage("Could not update debt")
+		}
+		defer func(Body io.ReadCloser) {
+			_ = Body.Close()
+		}(res.Body)
+		if res.StatusCode != http.StatusOK {
+			log.Error().Msgf("debt post request was not successful: %s", res.Status)
+			return ephemeralMessage("Could not update debt")
+		}
+		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
+			updateDebtsMessage(s)
+		}
+		return &api.InteractionResponseData{
+			Content: option.NewNullableString(fmt.Sprintf("Removed %v from %v", amount, name)),
 			Flags:   discord.EphemeralMessage,
 		}
 	}

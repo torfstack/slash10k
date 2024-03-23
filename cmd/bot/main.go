@@ -23,8 +23,12 @@ var commands = []api.CreateCommandData{
 	}},
 	{Name: "10k", Description: "Packt 10k in die Gildenbank!", Options: discord.CommandOptions{
 		&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
-		&discord.StringOption{OptionName: "amount", Description: "Betrag, kann negativ sein", Required: true},
-		&discord.StringOption{OptionName: "reason", Description: "Grund", Required: false},
+		&discord.StringOption{OptionName: "amount", Description: "Betrag", Required: true},
+		&discord.StringOption{OptionName: "reason", Description: "Grund", Required: true},
+	}},
+	{Name: "10kpay", Description: "Hat 10k in die Gildenbank gepackt!", Options: discord.CommandOptions{
+		&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
+		&discord.StringOption{OptionName: "amount", Description: "Betrag", Required: true},
 	}},
 	{Name: "10kwhy", Description: "Warum 10k? (Historie ist limitiert)", Options: discord.CommandOptions{
 		&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
@@ -45,6 +49,7 @@ func main() {
 	command.Setup(context.Background(), d)
 	r.AddFunc("10kup", command.SetChannel(s, d))
 	r.AddFunc("10k", command.AddDebt(s))
+	r.AddFunc("10kpay", command.SubDebt(s))
 	r.AddFunc("10kwhy", command.GetJournalEntries())
 
 	if err := cmdroute.OverwriteCommands(s, commands); err != nil {
