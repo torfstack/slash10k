@@ -1,9 +1,12 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="NO_ADMIN_PW" type="GoApplicationRunConfiguration" factoryName="Go Application">
+  <configuration default="false" name="WITH_ADMIN_PW" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="scurvy10k" />
     <working_directory value="$PROJECT_DIR$" />
-    <go_parameters value="-ldflags &quot;-X main.adminPw=disabled&quot;" />
+    <envs>
+      <env name="ADMIN_PASSWORD" value="admin" />
+    </envs>
     <kind value="FILE" />
-    <package value="slash10k" />
+    <package value="scurvy10k" />
     <directory value="$PROJECT_DIR$" />
     <filePath value="$PROJECT_DIR$/src/main.go" />
     <method v="2">
