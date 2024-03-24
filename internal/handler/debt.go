@@ -107,6 +107,9 @@ func AddDebt(d db.Database) func(c echo.Context) error {
 		if err = c.Bind(&params); err != nil {
 			return c.String(400, "could not bind params")
 		}
+		if len(params.Description) > 50 {
+			return c.String(400, "description must be less than 50 characters")
+		}
 
 		ctx := c.Request().Context()
 		conn, err := d.Connect(ctx, utils.DefaultConfig().ConnectionString)
