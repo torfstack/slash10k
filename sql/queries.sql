@@ -39,7 +39,7 @@ INSERT INTO player (
 
 -- name: DeletePlayer :exec
 DELETE FROM player
-WHERE id = $1;
+WHERE name = $1;
 
 -- name: NumberOfPlayers :one
 SELECT COUNT(*) FROM player;

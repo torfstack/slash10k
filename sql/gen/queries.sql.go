@@ -65,11 +65,11 @@ func (q *Queries) DeleteJournalEntry(ctx context.Context, id int32) error {
 
 const deletePlayer = `-- name: DeletePlayer :exec
 DELETE FROM player
-WHERE id = $1
+WHERE name = $1
 `
 
-func (q *Queries) DeletePlayer(ctx context.Context, id int32) error {
-	_, err := q.db.Exec(ctx, deletePlayer, id)
+func (q *Queries) DeletePlayer(ctx context.Context, name string) error {
+	_, err := q.db.Exec(ctx, deletePlayer, name)
 	return err
 }
 

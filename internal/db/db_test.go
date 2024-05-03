@@ -132,8 +132,17 @@ func Test_Connection(t *testing.T) {
 				}
 			},
 		},
+		{
+			name: "can not add player with same name twice",
+			withConnection: func(t *testing.T, conn Connection, ctx context.Context) {
+				_, _ = conn.Queries().AddPlayer(ctx, "torfstack")
+				_, e := conn.Queries().AddPlayer(ctx, "torfstack")
+				if e == nil {
+					t.Fatalf("Expected error, got nil")
+				}
+			},
+		},
 	}
-
 	ctx := context.Background()
 	cont, err := setupDatabase(t)
 	if err != nil {
