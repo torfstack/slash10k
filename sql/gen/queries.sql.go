@@ -63,6 +63,16 @@ func (q *Queries) DeleteJournalEntry(ctx context.Context, id int32) error {
 	return err
 }
 
+const deletePlayer = `-- name: DeletePlayer :exec
+DELETE FROM player
+WHERE name = $1
+`
+
+func (q *Queries) DeletePlayer(ctx context.Context, name string) error {
+	_, err := q.db.Exec(ctx, deletePlayer, name)
+	return err
+}
+
 const getAllDebts = `-- name: GetAllDebts :many
 SELECT p.id, name, d.id, amount, last_updated, user_id FROM player p
 JOIN debt d ON p.id = d.user_id

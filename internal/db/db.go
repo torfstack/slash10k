@@ -23,6 +23,7 @@ type Connection interface {
 type Queries interface {
 	NumberOfPlayers(ctx context.Context) (int64, error)
 	AddPlayer(ctx context.Context, name string) (sqlc.Player, error)
+	DeletePlayer(ctx context.Context, name string) error
 	GetIdOfPlayer(ctx context.Context, name string) (int32, error)
 
 	GetAllDebts(ctx context.Context) ([]sqlc.GetAllDebtsRow, error)

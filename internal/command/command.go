@@ -3,6 +3,7 @@ package command
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -108,10 +109,7 @@ func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
 			updateDebtsMessage(s)
 		}
-		return &api.InteractionResponseData{
-			Content: option.NewNullableString(fmt.Sprintf("Added %v to %v", amount, name)),
-			Flags:   discord.EphemeralMessage,
-		}
+		return ephemeralMessage(fmt.Sprintf("Added %v to %v", amount, name))
 	}
 }
 
@@ -141,10 +139,7 @@ func SubDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
 			updateDebtsMessage(s)
 		}
-		return &api.InteractionResponseData{
-			Content: option.NewNullableString(fmt.Sprintf("Removed %v from %v", amount, name)),
-			Flags:   discord.EphemeralMessage,
-		}
+		return ephemeralMessage(fmt.Sprintf("Removed %v from %v", amount, name))
 	}
 }
 
@@ -185,6 +180,76 @@ func GetJournalEntries() func(ctx context.Context, data cmdroute.CommandData) *a
 			return ephemeralMessage("No journal entries found")
 		}
 	}
+}
+
+func AddPlayer(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+		if data.Event.SenderID() != torfstackId {
+			log.Error().Msgf("cannot add player: not torfstack, got %v", data.Event.SenderID())
+			return ephemeralMessage("You are not allowed to add a player, ask Torfstack!")
+		}
+		options := data.Options
+		name := options.Find("name").String()
+		req, err := http.NewRequest(http.MethodPost, BaseUrl+"api/admin/player/"+name, nil)
+		req.Header.Set("Authorization", basicAuth("admin", os.Getenv("ADMIN_PASSWORD")))
+		if err != nil {
+			log.Error().Msgf("could not create add player request: %s", err)
+			return ephemeralMessage("Could not add player")
+		}
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Error().Msgf("could not send player add request: %s", err)
+			return ephemeralMessage("Could not add player")
+		}
+		defer func(Body io.ReadCloser) {
+			_ = Body.Close()
+		}(res.Body)
+		if res.StatusCode != http.StatusNoContent {
+			log.Error().Msgf("player add request was not successful: %s", res.Status)
+			return ephemeralMessage("Could not add player")
+		}
+		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
+			updateDebtsMessage(s)
+		}
+		return ephemeralMessage(fmt.Sprintf("Added player %v", name))
+	}
+}
+
+func DeletePlayer(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+		if data.Event.SenderID() != torfstackId {
+			log.Error().Msgf("cannot delete player: not torfstack, got %v", data.Event.SenderID())
+			return ephemeralMessage("You are not allowed to delete a player, ask Torfstack!")
+		}
+		options := data.Options
+		name := options.Find("name").String()
+		req, err := http.NewRequest(http.MethodDelete, BaseUrl+"api/admin/player/"+name, nil)
+		req.Header.Set("Authorization", basicAuth("admin", os.Getenv("ADMIN_PASSWORD")))
+		if err != nil {
+			log.Error().Msgf("could not create delete player request: %s", err)
+			return ephemeralMessage("Could not delete player")
+		}
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Error().Msgf("could not send player delete request: %s", err)
+			return ephemeralMessage("Could not delete player")
+		}
+		defer func(Body io.ReadCloser) {
+			_ = Body.Close()
+		}(res.Body)
+		if res.StatusCode != http.StatusNoContent {
+			log.Error().Msgf("player delete request was not successful: %s", res.Status)
+			return ephemeralMessage("Could not delete player")
+		}
+		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
+			updateDebtsMessage(s)
+		}
+		return ephemeralMessage(fmt.Sprintf("Deleted player %v", name))
+	}
+}
+
+func basicAuth(user, pass string) string {
+	return "Basic " + base64.StdEncoding.EncodeToString([]byte(user+":"+pass))
 }
 
 func journalEntriesString(entries models.JournalEntries) (string, error) {

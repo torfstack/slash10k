@@ -63,7 +63,7 @@ func main() {
 	}
 
 	admin.POST("/player/:name", handler.AddPlayer(d))
-	admin.DELETE("/player/:name", handler.DeletePlayer)
+	admin.DELETE("/player/:name", handler.DeletePlayer(d))
 	admin.POST("/char", handler.AddChar)
 	admin.DELETE("/char/:name", handler.DeleteChar)
 

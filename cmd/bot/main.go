@@ -33,6 +33,12 @@ var commands = []api.CreateCommandData{
 	{Name: "10kwhy", Description: "Warum 10k? (Historie ist limitiert)", Options: discord.CommandOptions{
 		&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
 	}},
+	{Name: "10kplayeradd", Description: "Füge einen Spieler hinzu.", Options: discord.CommandOptions{
+		&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
+	}},
+	{Name: "10kplayerdel", Description: "Entferne einen Spieler.", Options: discord.CommandOptions{
+		&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
+	}},
 }
 
 func main() {
@@ -51,6 +57,8 @@ func main() {
 	r.AddFunc("10k", command.AddDebt(s))
 	r.AddFunc("10kpay", command.SubDebt(s))
 	r.AddFunc("10kwhy", command.GetJournalEntries())
+	r.AddFunc("10kplayeradd", command.AddPlayer(s))
+	r.AddFunc("10kplayerdel", command.DeletePlayer(s))
 
 	if err := cmdroute.OverwriteCommands(s, commands); err != nil {
 		log.Fatal().Msgf("cannot update commands: %s", err)

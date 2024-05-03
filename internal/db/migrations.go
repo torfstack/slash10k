@@ -11,14 +11,29 @@ import (
 )
 
 const (
-	MigrationsDir = "sql/migrations"
+	DefaultMigrationsDir = "sql/migrations"
 )
 
-var (
-	ErrMigrationDirNotExist = errors.New("migration directory 'sql/migrations' does not exist")
-)
+type MigrateOpts func(*MigrateOptions)
 
-func Migrate(ctx context.Context, connectionString string) error {
+type MigrateOptions struct {
+	MigrationsDir string
+}
+
+func WithMigrationsDir(dir string) MigrateOpts {
+	return func(opts *MigrateOptions) {
+		opts.MigrationsDir = dir
+	}
+}
+
+func Migrate(ctx context.Context, connectionString string, opts ...MigrateOpts) error {
+	migrateOpts := &MigrateOptions{
+		MigrationsDir: DefaultMigrationsDir,
+	}
+	for _, opt := range opts {
+		opt(migrateOpts)
+	}
+
 	if err := goose.SetDialect("postgres"); err != nil {
 		return fmt.Errorf("could not set goose dialect 'postgres': %w", err)
 	}
@@ -31,11 +46,11 @@ func Migrate(ctx context.Context, connectionString string) error {
 		_ = db.Close()
 	}(db)
 
-	if _, err = os.Stat(MigrationsDir); errors.Is(err, os.ErrNotExist) {
-		return ErrMigrationDirNotExist
+	if _, err = os.Stat(migrateOpts.MigrationsDir); errors.Is(err, os.ErrNotExist) {
+		return fmt.Errorf("specified migration directory '%s' does not exist", migrateOpts.MigrationsDir)
 	}
 
-	if err = goose.UpContext(ctx, db, MigrationsDir); err != nil {
+	if err = goose.UpContext(ctx, db, migrateOpts.MigrationsDir); err != nil {
 		return fmt.Errorf("could not run goose up: %w", err)
 	}
 

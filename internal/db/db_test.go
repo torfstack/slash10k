@@ -132,8 +132,17 @@ func Test_Connection(t *testing.T) {
 				}
 			},
 		},
+		{
+			name: "can not add player with same name twice",
+			withConnection: func(t *testing.T, conn Connection, ctx context.Context) {
+				_, _ = conn.Queries().AddPlayer(ctx, "torfstack")
+				_, e := conn.Queries().AddPlayer(ctx, "torfstack")
+				if e == nil {
+					t.Fatalf("Expected error, got nil")
+				}
+			},
+		},
 	}
-
 	ctx := context.Background()
 	cont, err := setupDatabase(t)
 	if err != nil {
@@ -199,7 +208,7 @@ func setupDatabase(t *testing.T) (*postgres.PostgresContainer, error) {
 		return nil, err
 	}
 
-	err = Migrate(ctx, connectionString)
+	err = Migrate(ctx, connectionString, WithMigrationsDir("../../sql/migrations"))
 	if err != nil {
 		t.Fatalf("Could not run migrations: %s", err)
 		return nil, err

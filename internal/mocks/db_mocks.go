@@ -175,6 +175,20 @@ func (mr *MockQueriesMockRecorder) DeleteJournalEntry(arg0, arg1 any) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteJournalEntry", reflect.TypeOf((*MockQueries)(nil).DeleteJournalEntry), arg0, arg1)
 }
 
+// DeletePlayer mocks base method.
+func (m *MockQueries) DeletePlayer(arg0 context.Context, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeletePlayer", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeletePlayer indicates an expected call of DeletePlayer.
+func (mr *MockQueriesMockRecorder) DeletePlayer(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePlayer", reflect.TypeOf((*MockQueries)(nil).DeletePlayer), arg0, arg1)
+}
+
 // GetAllDebts mocks base method.
 func (m *MockQueries) GetAllDebts(arg0 context.Context) ([]sqlc.GetAllDebtsRow, error) {
 	m.ctrl.T.Helper()

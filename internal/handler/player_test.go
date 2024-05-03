@@ -38,7 +38,7 @@ func TestAddPlayer(t *testing.T) {
 						UserID: db.IdType(3),
 					})
 			},
-			wantStatus: http.StatusOK,
+			wantStatus: http.StatusNoContent,
 		},
 		{
 			name: "adding player 'torfstack' and 'neruh'",
@@ -71,7 +71,7 @@ func TestAddPlayer(t *testing.T) {
 						UserID: db.IdType(2),
 					})
 			},
-			wantStatus: http.StatusOK,
+			wantStatus: http.StatusNoContent,
 		},
 		{
 			name: "adding player 'torfstack' after 100 players",
