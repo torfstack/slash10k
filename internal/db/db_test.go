@@ -208,7 +208,7 @@ func setupDatabase(t *testing.T) (*postgres.PostgresContainer, error) {
 		return nil, err
 	}
 
-	err = Migrate(ctx, connectionString)
+	err = Migrate(ctx, connectionString, WithMigrationsDir("../../sql/migrations"))
 	if err != nil {
 		t.Fatalf("Could not run migrations: %s", err)
 		return nil, err
