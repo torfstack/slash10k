@@ -39,6 +39,7 @@ var commands = []api.CreateCommandData{
 	{Name: "10kplayerdel", Description: "Entferne einen Spieler.", Options: discord.CommandOptions{
 		&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
 	}},
+	{Name: "10krefresh", Description: "Refresh debts."},
 }
 
 func main() {
@@ -59,6 +60,7 @@ func main() {
 	r.AddFunc("10kwhy", command.GetJournalEntries())
 	r.AddFunc("10kplayeradd", command.AddPlayer(s))
 	r.AddFunc("10kplayerdel", command.DeletePlayer(s))
+	r.AddFunc("10krefresh", command.RefreshDebts(s))
 
 	if err := cmdroute.OverwriteCommands(s, commands); err != nil {
 		log.Fatal().Msgf("cannot update commands: %s", err)

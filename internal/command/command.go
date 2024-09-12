@@ -31,9 +31,10 @@ import (
 )
 
 const (
-	BaseUrl    = "https://true.torfstack.com/"
-	DebtsUrl   = BaseUrl + "api/debt"
-	JournalUrl = BaseUrl + "api/journal"
+	BaseUrl      = "https://true.torfstack.com/"
+	DebtsUrl     = BaseUrl + "api/debt"
+	JournalUrl   = BaseUrl + "api/journal"
+	DeleteReason = "DebtsUpdated"
 )
 
 var (
@@ -109,6 +110,7 @@ func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
 			updateDebtsMessage(s)
 		}
+		s.SendMessage(channelId, "")
 		return ephemeralMessage(fmt.Sprintf("Added %v to %v", amount, name))
 	}
 }
@@ -315,6 +317,13 @@ func SetChannel(s *state.State, d db.Database) func(ctx context.Context, data cm
 	}
 }
 
+func RefreshDebts(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+		updateDebtsMessage(s)
+		return ephemeralMessage("Debts refreshed successfully")
+	}
+}
+
 func getDebts() (*models.AllDebtsResponse, error) {
 	res, err := http.Get(DebtsUrl)
 	if err != nil {
@@ -375,7 +384,15 @@ func updateDebtsMessage(s *state.State) {
 		return
 	}
 
-	m, err := s.EditMessage(channelId, messageId, "", *transformDebtsToEmbed(debts))
+	// Delete old message
+	err = s.DeleteMessage(channelId, messageId, DeleteReason)
+	if err != nil {
+		log.Error().Msgf("cannot delete message: %s", err)
+		return
+	}
+
+	// Send new message
+	m, err := s.SendMessage(channelId, "", *transformDebtsToEmbed(debts))
 	if err != nil {
 		log.Error().Msgf("cannot edit message: %s", err)
 		return
