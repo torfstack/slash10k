@@ -107,9 +107,6 @@ func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 			log.Error().Msgf("debt post request was not successful: %s", res.Status)
 			return ephemeralMessage("Could not update debt")
 		}
-		if user := data.Event.Sender(); user != nil {
-
-		}
 		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
 			UpdateDebtsMessage(s)
 		}
@@ -143,7 +140,7 @@ func SubDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
 			UpdateDebtsMessage(s)
 		}
-		return ephemeralMessage(fmt.Sprintf("Removed %v from %v", amount, name))
+		return visibleMessage(fmt.Sprintf("Removed %v from %v", amount, name))
 	}
 }
 
@@ -176,10 +173,7 @@ func GetJournalEntries() func(ctx context.Context, data cmdroute.CommandData) *a
 				log.Error().Msgf("cannot get journal entries string: %s", err)
 				return ephemeralMessage("Could not get journal entries")
 			}
-			return &api.InteractionResponseData{
-				Content: option.NewNullableString(s),
-				Flags:   discord.EphemeralMessage,
-			}
+			return visibleMessage(fmt.Sprintf("Journal entries of %v/n%v", name, s))
 		} else {
 			return ephemeralMessage("No journal entries found")
 		}
