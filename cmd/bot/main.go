@@ -56,17 +56,17 @@ func main() {
 
 	command.Setup(context.Background(), d)
 	r.AddFunc("10kup", command.SetChannel(s, d))
-	r.AddFunc("10k", command.AddDebt(s))
-	r.AddFunc("10kpay", command.SubDebt(s))
+	r.AddFunc("10k", command.AddDebt(s, d))
+	r.AddFunc("10kpay", command.SubDebt(s, d))
 	r.AddFunc("10kwhy", command.GetJournalEntries())
-	r.AddFunc("10kplayeradd", command.AddPlayer(s))
-	r.AddFunc("10kplayerdel", command.DeletePlayer(s))
-	r.AddFunc("10krefresh", command.RefreshDebts(s))
+	r.AddFunc("10kplayeradd", command.AddPlayer(s, d))
+	r.AddFunc("10kplayerdel", command.DeletePlayer(s, d))
+	r.AddFunc("10krefresh", command.RefreshDebts(s, d))
 
 	ticker := time.NewTicker(10 * time.Minute)
 	go func() {
 		for range ticker.C {
-			command.UpdateDebtsMessage(s)
+			command.UpdateDebtsMessage(context.Background(), s, d)
 		}
 	}()
 
