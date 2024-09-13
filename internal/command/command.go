@@ -31,10 +31,13 @@ import (
 )
 
 const (
-	BaseUrl      = "https://true.torfstack.com/"
-	DebtsUrl     = BaseUrl + "api/debt"
-	JournalUrl   = BaseUrl + "api/journal"
+	BaseUrl    = "https://true.torfstack.com/"
+	DebtsUrl   = BaseUrl + "api/debt"
+	JournalUrl = BaseUrl + "api/journal"
+
 	DeleteReason = "DebtsUpdated"
+
+	TorfstackId = "263352209654153236"
 )
 
 var (
@@ -44,7 +47,7 @@ var (
 )
 
 func Setup(ctx context.Context, d db.Database) {
-	userId, err := discord.ParseSnowflake("263352209654153236")
+	userId, err := discord.ParseSnowflake(TorfstackId)
 	if err != nil {
 		log.Error().Msgf("cannot parse torfstack id: %s", err)
 		return
@@ -79,7 +82,7 @@ func Setup(ctx context.Context, d db.Database) {
 	channelId = discord.ChannelID(channelIdSnowflake)
 }
 
-func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+func AddDebt(s *state.State, d db.Database) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 		options := data.Options
 		name := options.Find("name").String()
@@ -108,13 +111,13 @@ func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 			return ephemeralMessage("Could not update debt")
 		}
 		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
-			UpdateDebtsMessage(s)
+			UpdateDebtsMessage(ctx, s, d)
 		}
 		return visibleMessage(fmt.Sprintf("Added %v to %v, because '%v'", amount, name, reason))
 	}
 }
 
-func SubDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+func SubDebt(s *state.State, d db.Database) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 		options := data.Options
 		name := options.Find("name").String()
@@ -138,7 +141,7 @@ func SubDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 			return ephemeralMessage("Could not update debt")
 		}
 		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
-			UpdateDebtsMessage(s)
+			UpdateDebtsMessage(ctx, s, d)
 		}
 		return visibleMessage(fmt.Sprintf("Removed %v from %v", amount, name))
 	}
@@ -180,7 +183,7 @@ func GetJournalEntries() func(ctx context.Context, data cmdroute.CommandData) *a
 	}
 }
 
-func AddPlayer(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+func AddPlayer(s *state.State, d db.Database) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 		if data.Event.SenderID() != torfstackId {
 			log.Error().Msgf("cannot add player: not torfstack, got %v", data.Event.SenderID())
@@ -207,13 +210,13 @@ func AddPlayer(s *state.State) func(ctx context.Context, data cmdroute.CommandDa
 			return ephemeralMessage("Could not add player")
 		}
 		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
-			UpdateDebtsMessage(s)
+			UpdateDebtsMessage(ctx, s, d)
 		}
 		return ephemeralMessage(fmt.Sprintf("Added player %v", name))
 	}
 }
 
-func DeletePlayer(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+func DeletePlayer(s *state.State, d db.Database) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 		if data.Event.SenderID() != torfstackId {
 			log.Error().Msgf("cannot delete player: not torfstack, got %v", data.Event.SenderID())
@@ -240,7 +243,7 @@ func DeletePlayer(s *state.State) func(ctx context.Context, data cmdroute.Comman
 			return ephemeralMessage("Could not delete player")
 		}
 		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
-			UpdateDebtsMessage(s)
+			UpdateDebtsMessage(ctx, s, d)
 		}
 		return ephemeralMessage(fmt.Sprintf("Deleted player %v", name))
 	}
@@ -313,9 +316,9 @@ func SetChannel(s *state.State, d db.Database) func(ctx context.Context, data cm
 	}
 }
 
-func RefreshDebts(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+func RefreshDebts(s *state.State, d db.Database) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
-		UpdateDebtsMessage(s)
+		UpdateDebtsMessage(ctx, s, d)
 		return ephemeralMessage("Debts refreshed successfully")
 	}
 }
@@ -328,12 +331,12 @@ func getDebts() (*models.AllDebtsResponse, error) {
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
 	}(res.Body)
-	bytes, err := io.ReadAll(res.Body)
+	b, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
 	var debts models.AllDebtsResponse
-	if err = json.Unmarshal(bytes, &debts); err != nil {
+	if err = json.Unmarshal(b, &debts); err != nil {
 		log.Error().Msgf("cannot unmarshal debts: %s", err)
 		return nil, err
 	}
@@ -373,7 +376,7 @@ func transformDebtsToEmbed(debts *models.AllDebtsResponse) *discord.Embed {
 	}
 }
 
-func UpdateDebtsMessage(s *state.State) {
+func UpdateDebtsMessage(ctx context.Context, s *state.State, d db.Database) {
 	debts, err := getDebts()
 	if err != nil {
 		log.Error().Msgf("cannot get debts: %s", err)
@@ -394,6 +397,18 @@ func UpdateDebtsMessage(s *state.State) {
 		return
 	}
 	messageId = m.ID
+
+	conn, err := d.Connect(ctx, utils.DefaultConfig().ConnectionString)
+	if err != nil {
+		log.Error().Msgf("cannot get db connection: %s", err)
+	}
+	defer func(conn db.Connection, ctx context.Context) {
+		_ = conn.Close(ctx)
+	}(conn, ctx)
+	_, err = conn.Queries().PutBotSetup(ctx, sqlc.PutBotSetupParams{
+		ChannelID: channelId.String(),
+		MessageID: messageId.String(),
+	})
 }
 
 func ephemeralMessage(content string) *api.InteractionResponseData {
