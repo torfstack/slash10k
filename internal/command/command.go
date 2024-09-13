@@ -113,7 +113,8 @@ func AddDebt(s *state.State, d db.Database) func(ctx context.Context, data cmdro
 		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
 			UpdateDebtsMessage(ctx, s, d)
 		}
-		return visibleMessage(fmt.Sprintf("Added %v to %v, because '%v'", amount, name, reason))
+		caser := cases.Title(language.English)
+		return visibleMessage(fmt.Sprintf("Added %v to %v, because '%v'", amount, caser.String(name), reason))
 	}
 }
 
@@ -143,7 +144,8 @@ func SubDebt(s *state.State, d db.Database) func(ctx context.Context, data cmdro
 		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
 			UpdateDebtsMessage(ctx, s, d)
 		}
-		return visibleMessage(fmt.Sprintf("Removed %v from %v", amount, name))
+		caser := cases.Title(language.English)
+		return visibleMessage(fmt.Sprintf("Removed %v from %v", amount, caser.String(name)))
 	}
 }
 
