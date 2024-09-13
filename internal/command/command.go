@@ -176,7 +176,8 @@ func GetJournalEntries() func(ctx context.Context, data cmdroute.CommandData) *a
 				log.Error().Msgf("cannot get journal entries string: %s", err)
 				return ephemeralMessage("Could not get journal entries")
 			}
-			return visibleMessage(fmt.Sprintf("Journal entries of %v/n%v", name, s))
+			caser := cases.Title(language.English)
+			return visibleMessage(fmt.Sprintf("Journal entries of %v%v", caser.String(name), s))
 		} else {
 			return ephemeralMessage("No journal entries found")
 		}
