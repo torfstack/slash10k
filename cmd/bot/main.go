@@ -2,15 +2,13 @@ package main
 
 import (
 	"context"
+	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"os"
 	"slash10k/internal/command"
 	"slash10k/internal/db"
 	"strings"
-	"time"
-
-	"github.com/diamondburned/arikawa/v3/discord"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/api/cmdroute"
@@ -62,13 +60,6 @@ func main() {
 	r.AddFunc("10kplayeradd", command.AddPlayer(s, d))
 	r.AddFunc("10kplayerdel", command.DeletePlayer(s, d))
 	r.AddFunc("10krefresh", command.RefreshDebts(s, d))
-
-	ticker := time.NewTicker(10 * time.Minute)
-	go func() {
-		for range ticker.C {
-			command.UpdateDebtsMessage(context.Background(), s, d)
-		}
-	}()
 
 	if err := cmdroute.OverwriteCommands(s, commands); err != nil {
 		log.Fatal().Msgf("cannot update commands: %s", err)
