@@ -107,11 +107,13 @@ func AddDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 			log.Error().Msgf("debt post request was not successful: %s", res.Status)
 			return ephemeralMessage("Could not update debt")
 		}
-		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
-			updateDebtsMessage(s)
+		if user := data.Event.Sender(); user != nil {
+
 		}
-		s.SendMessage(channelId, "")
-		return ephemeralMessage(fmt.Sprintf("Added %v to %v", amount, name))
+		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
+			UpdateDebtsMessage(s)
+		}
+		return visibleMessage(fmt.Sprintf("Added %v to %v, because '%v'", amount, name, reason))
 	}
 }
 
@@ -139,7 +141,7 @@ func SubDebt(s *state.State) func(ctx context.Context, data cmdroute.CommandData
 			return ephemeralMessage("Could not update debt")
 		}
 		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
-			updateDebtsMessage(s)
+			UpdateDebtsMessage(s)
 		}
 		return ephemeralMessage(fmt.Sprintf("Removed %v from %v", amount, name))
 	}
@@ -211,7 +213,7 @@ func AddPlayer(s *state.State) func(ctx context.Context, data cmdroute.CommandDa
 			return ephemeralMessage("Could not add player")
 		}
 		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
-			updateDebtsMessage(s)
+			UpdateDebtsMessage(s)
 		}
 		return ephemeralMessage(fmt.Sprintf("Added player %v", name))
 	}
@@ -244,7 +246,7 @@ func DeletePlayer(s *state.State) func(ctx context.Context, data cmdroute.Comman
 			return ephemeralMessage("Could not delete player")
 		}
 		if channelId != discord.NullChannelID && messageId != discord.NullMessageID {
-			updateDebtsMessage(s)
+			UpdateDebtsMessage(s)
 		}
 		return ephemeralMessage(fmt.Sprintf("Deleted player %v", name))
 	}
@@ -319,7 +321,7 @@ func SetChannel(s *state.State, d db.Database) func(ctx context.Context, data cm
 
 func RefreshDebts(s *state.State) func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
 	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
-		updateDebtsMessage(s)
+		UpdateDebtsMessage(s)
 		return ephemeralMessage("Debts refreshed successfully")
 	}
 }
@@ -377,7 +379,7 @@ func transformDebtsToEmbed(debts *models.AllDebtsResponse) *discord.Embed {
 	}
 }
 
-func updateDebtsMessage(s *state.State) {
+func UpdateDebtsMessage(s *state.State) {
 	debts, err := getDebts()
 	if err != nil {
 		log.Error().Msgf("cannot get debts: %s", err)
@@ -404,5 +406,11 @@ func ephemeralMessage(content string) *api.InteractionResponseData {
 	return &api.InteractionResponseData{
 		Content: option.NewNullableString(content),
 		Flags:   discord.EphemeralMessage,
+	}
+}
+
+func visibleMessage(content string) *api.InteractionResponseData {
+	return &api.InteractionResponseData{
+		Content: option.NewNullableString(content),
 	}
 }

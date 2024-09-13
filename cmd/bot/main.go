@@ -6,6 +6,7 @@ import (
 	"slash10k/internal/command"
 	"slash10k/internal/db"
 	"strings"
+	"time"
 
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/rs/zerolog"
@@ -61,6 +62,13 @@ func main() {
 	r.AddFunc("10kplayeradd", command.AddPlayer(s))
 	r.AddFunc("10kplayerdel", command.DeletePlayer(s))
 	r.AddFunc("10krefresh", command.RefreshDebts(s))
+
+	ticker := time.NewTicker(10 * time.Minute)
+	go func() {
+		for range ticker.C {
+			command.UpdateDebtsMessage(s)
+		}
+	}()
 
 	if err := cmdroute.OverwriteCommands(s, commands); err != nil {
 		log.Fatal().Msgf("cannot update commands: %s", err)
