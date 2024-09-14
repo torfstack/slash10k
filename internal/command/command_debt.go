@@ -27,6 +27,7 @@ func AddDebt(s *state.State, d db.Database, c DebtClient) func(
 		name := options.Find("name").String()
 		amount, err := options.Find("amount").IntValue()
 		if err != nil || amount < 0 {
+			log.Error().Msgf("could not parse amount: %v, err: %s", amount, err)
 			return ephemeralMessage("Amount needs to be a non-negative number!")
 		}
 		reason := options.Find("reason").String()
@@ -53,6 +54,7 @@ func SubDebt(s *state.State, d db.Database, c DebtClient) func(
 		name := options.Find("name").String()
 		amount, err := options.Find("amount").IntValue()
 		if err != nil || amount < 0 {
+			log.Error().Msgf("could not parse amount: %v, err: %s", amount, err)
 			return ephemeralMessage("Amount needs to be a non-negative number!")
 		}
 
