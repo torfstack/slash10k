@@ -39,7 +39,7 @@ func TestAddDebt(t *testing.T) {
 					GetIdOfPlayer(gomock.Any(), "torfstack").
 					Return(int32(1), nil)
 				q.EXPECT().
-					GetDebt(gomock.Any(), gomock.Any()).
+					GetDebt(gomock.Any(), gomock.AnyOf(db.IdType(1))).
 					Return(sqlc.Debt{
 						Amount: 20000,
 						UserID: db.IdType(1),

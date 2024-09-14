@@ -132,11 +132,21 @@ func AddDebt(d db.Database) func(c echo.Context) error {
 }
 
 func addDebtToPlayer(ctx context.Context, conn db.Connection, name string, amount int64, desc string) error {
-	pId, err := conn.Queries().GetIdOfPlayer(ctx, name)
+	tx, err := conn.StartTransaction(ctx)
+	if err != nil {
+		return fmt.Errorf("could not start transaction: %w", err)
+	}
+	defer func(tx db.Transaction, ctx context.Context) {
+		_ = tx.Commit(ctx)
+	}(tx, ctx)
+
+	queries := tx.Queries()
+
+	pId, err := queries.GetIdOfPlayer(ctx, name)
 	if err != nil {
 		return fmt.Errorf("could not get player id for %s: %w", name, err)
 	}
-	currentDebt, err := conn.Queries().GetDebt(ctx, db.IdType(pId))
+	currentDebt, err := queries.GetDebt(ctx, db.IdType(pId))
 	if err != nil {
 		return fmt.Errorf("could not get debt for player (id:%v): %w", pId, err)
 	}
@@ -148,7 +158,7 @@ func addDebtToPlayer(ctx context.Context, conn db.Connection, name string, amoun
 	if newAmount > 1_000_000 {
 		return ErrDebtTooHigh
 	}
-	err = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{
+	err = queries.SetDebt(ctx, sqlc.SetDebtParams{
 		Amount: currentDebt.Amount + amount,
 		UserID: pgtype.Int4{
 			Int32: pId,
@@ -157,7 +167,7 @@ func addDebtToPlayer(ctx context.Context, conn db.Connection, name string, amoun
 	})
 
 	if amount > 0 && desc != "" {
-		_, err = conn.Queries().AddJournalEntry(ctx, sqlc.AddJournalEntryParams{
+		_, err = queries.AddJournalEntry(ctx, sqlc.AddJournalEntryParams{
 			Amount:      amount,
 			Description: desc,
 			UserID: pgtype.Int4{
@@ -171,7 +181,7 @@ func addDebtToPlayer(ctx context.Context, conn db.Connection, name string, amoun
 	}
 	if amount < 0 {
 		var entries []sqlc.DebtJournal
-		entries, err = conn.Queries().GetJournalEntries(ctx, db.IdType(pId))
+		entries, err = queries.GetJournalEntries(ctx, db.IdType(pId))
 		temp := amount
 		for _, entry := range entries {
 			temp += entry.Amount
