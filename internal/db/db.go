@@ -9,7 +9,7 @@ import (
 	sqlc "slash10k/sql/gen"
 )
 
-//go:generate mockgen -destination=../mocks/db_mocks.go -package=mock_db slash10k/internal/db Database,Connection,Queries
+//go:generate mockgen -destination=../mocks/db_mocks.go -package=mock_db slash10k/internal/db Database,Connection,Queries,Transaction
 
 type Database interface {
 	Connect(ctx context.Context, connectionString string) (Connection, error)
@@ -17,6 +17,12 @@ type Database interface {
 
 type Connection interface {
 	Close(ctx context.Context) error
+	StartTransaction(ctx context.Context) (Transaction, error)
+	Queries() Queries
+}
+
+type Transaction interface {
+	Commit(ctx context.Context) error
 	Queries() Queries
 }
 
@@ -62,8 +68,28 @@ func (c connection) Close(ctx context.Context) error {
 	return c.conn.Close(ctx)
 }
 
+func (c connection) StartTransaction(ctx context.Context) (Transaction, error) {
+	tx, err := c.conn.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("could not start transaction: %w", err)
+	}
+	return &transaction{tx: tx}, nil
+}
+
 func (c connection) Queries() Queries {
 	return sqlc.New(c.conn)
+}
+
+type transaction struct {
+	tx pgx.Tx
+}
+
+func (t transaction) Commit(ctx context.Context) error {
+	return t.tx.Commit(ctx)
+}
+
+func (t transaction) Queries() Queries {
+	return sqlc.New(t.tx)
 }
 
 func IdType(id int32) pgtype.Int4 {

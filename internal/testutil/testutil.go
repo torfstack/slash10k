@@ -10,6 +10,7 @@ import (
 func QueriesMock(c *gomock.Controller) (db.Database, *mockdb.MockQueries) {
 	mockDb := mockdb.NewMockDatabase(c)
 	mockConn := mockdb.NewMockConnection(c)
+	mockTx := mockdb.NewMockTransaction(c)
 	mockQueries := mockdb.NewMockQueries(c)
 	mockDb.EXPECT().
 		Connect(gomock.Any(), gomock.Any()).
@@ -17,11 +18,23 @@ func QueriesMock(c *gomock.Controller) (db.Database, *mockdb.MockQueries) {
 		Return(mockConn, nil)
 	mockConn.EXPECT().
 		Queries().
-		MinTimes(1).
+		AnyTimes().
+		Return(mockQueries)
+	mockConn.EXPECT().
+		StartTransaction(gomock.Any()).
+		AnyTimes().
+		Return(mockTx, nil)
+	mockTx.EXPECT().
+		Queries().
+		AnyTimes().
 		Return(mockQueries)
 	mockConn.EXPECT().
 		Close(gomock.Any()).
 		MinTimes(1).
+		Return(nil)
+	mockTx.EXPECT().
+		Commit(gomock.Any()).
+		AnyTimes().
 		Return(nil)
 	return mockDb, mockQueries
 }
