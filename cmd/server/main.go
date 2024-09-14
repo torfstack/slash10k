@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/docker/docker/daemon/logger"
 	"os"
 	"slash10k/internal/db"
 	"slash10k/internal/handler"
@@ -30,9 +31,30 @@ func main() {
 
 	e.Pre(middleware.RemoveTrailingSlash())
 	e.Use(middleware.Recover())
-	e.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(
-		rate.Limit(20),
-	)))
+	e.Use(
+		middleware.RateLimiter(
+			middleware.NewRateLimiterMemoryStore(
+				rate.Limit(20),
+			),
+		),
+	)
+	e.Use(
+		middleware.RequestLoggerWithConfig(
+			middleware.RequestLoggerConfig{
+				LogStatus: true,
+				LogURI:    true,
+				LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+					log.Logger.Info().
+						Str("URI", v.URI).
+						Int("status", v.Status).
+						Msg("request")
+
+					return nil
+				},
+			}))
+			},
+		),
+	)
 
 	log.Debug().Msg("setting up routes")
 
@@ -57,9 +79,13 @@ func main() {
 			log.Fatal().Msg("ADMIN_PASSWORD not set")
 			return
 		}
-		admin.Use(middleware.BasicAuth(func(user, pass string, context echo.Context) (bool, error) {
-			return user == "admin" && pass == pw, nil
-		}))
+		admin.Use(
+			middleware.BasicAuth(
+				func(user, pass string, context echo.Context) (bool, error) {
+					return user == "admin" && pass == pw, nil
+				},
+			),
+		)
 	}
 
 	admin.POST("/player/:name", handler.AddPlayer(d))
