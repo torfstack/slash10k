@@ -58,7 +58,7 @@ func (c client) AddDebt(ctx context.Context, name string, amount int64, reason s
 	if err != nil {
 		return fmt.Errorf("could not create debt post request: %w", err)
 	}
-	res, err := http.DefaultClient.Do(req.WithContext(ctx))
+	res, err := c.Do(ctx, req)
 	if err != nil {
 		return fmt.Errorf("could not send debt post request: %w", err)
 	}
@@ -76,7 +76,7 @@ func (c client) GetAllDebts(ctx context.Context) (*models.AllDebtsResponse, erro
 	if err != nil {
 		return nil, fmt.Errorf("could not create all debts get request: %w", err)
 	}
-	res, err := http.DefaultClient.Do(req.WithContext(ctx))
+	res, err := c.Do(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("could not send all debts get request: %w", err)
 	}
@@ -107,7 +107,7 @@ func (c client) GetJournalEntries(ctx context.Context, name string) (*models.Jou
 		),
 		nil,
 	)
-	res, err := http.DefaultClient.Do(req.WithContext(ctx))
+	res, err := c.Do(ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("could not send journal entries get request: %w", err)
 	}
@@ -138,7 +138,7 @@ func (c client) AddPlayer(ctx context.Context, name string) error {
 	if err != nil {
 		return fmt.Errorf("could not create add player request: %w", err)
 	}
-	res, err := http.DefaultClient.Do(req.WithContext(ctx))
+	res, err := c.Do(ctx, req)
 	if err != nil {
 		return fmt.Errorf("could not send player add request: %w", err)
 	}
@@ -165,7 +165,7 @@ func (c client) DeletePlayer(ctx context.Context, name string) error {
 	if err != nil {
 		return fmt.Errorf("could not create player delete request: %w", err)
 	}
-	res, err := http.DefaultClient.Do(req.WithContext(ctx))
+	res, err := c.Do(ctx, req)
 	if err != nil {
 		return fmt.Errorf("could not send player delete request: %w", err)
 	}
@@ -176,4 +176,9 @@ func (c client) DeletePlayer(ctx context.Context, name string) error {
 		return fmt.Errorf("player delete request was NOT successful (204): received %s", res.Status)
 	}
 	return nil
+}
+
+func (c client) Do(ctx context.Context, req *http.Request) (*http.Response, error) {
+	req.Header.Set("Content-Type", "application/json")
+	return http.DefaultClient.Do(req.WithContext(ctx))
 }
