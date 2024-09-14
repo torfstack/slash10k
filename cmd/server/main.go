@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"github.com/docker/docker/daemon/logger"
 	"os"
 	"slash10k/internal/db"
 	"slash10k/internal/handler"
@@ -51,7 +50,6 @@ func main() {
 
 					return nil
 				},
-			}))
 			},
 		),
 	)
