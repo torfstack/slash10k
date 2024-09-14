@@ -94,7 +94,6 @@ func main() {
 }
 
 func setupLogger() {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	logLevel := os.Getenv("LOG_LEVEL")
 	if logLevel != "" {
 		l, err := zerolog.ParseLevel(strings.ToLower(logLevel))

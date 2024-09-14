@@ -96,23 +96,28 @@ func AddDebt(d db.Database) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		name := c.Param("player")
 		if name == "" {
+			log.Error().Msg("name is required!")
 			return c.String(400, "name is required!")
 		}
 
 		a := c.Param("amount")
 		if a == "" {
+			log.Error().Msg("amount is required!")
 			return c.String(400, "amount is required!")
 		}
 		amount, err := strconv.ParseInt(a, 10, 64)
 		if err != nil {
+			log.Err(err).Msgf("amount must be an integer!, got %v", a)
 			return c.String(400, "amount must be an integer!")
 		}
 
 		var params AddDebtParams
 		if err = c.Bind(&params); err != nil {
+			log.Err(err).Msg("could not bind params")
 			return c.String(400, "could not bind params")
 		}
 		if len(params.Description) > 50 {
+			log.Error().Msg("description must be less than 50 characters")
 			return c.String(400, "description must be less than 50 characters")
 		}
 

@@ -107,7 +107,6 @@ func main() {
 }
 
 func setupLogger() {
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	logLevel := os.Getenv("LOG_LEVEL")
 	if logLevel != "" {
 		l, err := zerolog.ParseLevel(strings.ToLower(logLevel))
@@ -119,8 +118,6 @@ func setupLogger() {
 	} else {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
-	output := zerolog.ConsoleWriter{Out: os.Stderr}
-	log.Logger = log.Output(output)
 }
 
 // go build -ldflags "-X main.adminPwDisabled=disabled" -o slash10k
