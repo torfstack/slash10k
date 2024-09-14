@@ -61,10 +61,13 @@ func allDebtsRespond(c echo.Context, conn db.Connection) error {
 		return c.HTML(http.StatusOK, b.String())
 	case "application/json":
 	case "":
-		return c.JSON(http.StatusOK, models.AllDebtsResponse{
-			Debts: debts,
-		})
+		return c.JSON(
+			http.StatusOK, models.AllDebtsResponse{
+				Debts: debts,
+			},
+		)
 	}
+	log.Warn().Str("accept", c.Request().Header.Get("Accept")).Msg("unsupported accept header")
 	return c.String(400, "unsupported accept header")
 }
 
@@ -75,10 +78,12 @@ func allDebts(conn db.Connection, ctx context.Context) ([]models.PlayerDebt, err
 	}
 	var debts []models.PlayerDebt
 	for _, debtRow := range dbDebts {
-		debts = append(debts, models.PlayerDebt{
-			Name:   debtRow.Name,
-			Amount: fmt.Sprint(debtRow.Amount),
-		})
+		debts = append(
+			debts, models.PlayerDebt{
+				Name:   debtRow.Name,
+				Amount: fmt.Sprint(debtRow.Amount),
+			},
+		)
 	}
 	return debts, nil
 }
@@ -158,23 +163,27 @@ func addDebtToPlayer(ctx context.Context, conn db.Connection, name string, amoun
 	if newAmount > 1_000_000 {
 		return ErrDebtTooHigh
 	}
-	err = queries.SetDebt(ctx, sqlc.SetDebtParams{
-		Amount: currentDebt.Amount + amount,
-		UserID: pgtype.Int4{
-			Int32: pId,
-			Valid: true,
-		},
-	})
-
-	if amount > 0 && desc != "" {
-		_, err = queries.AddJournalEntry(ctx, sqlc.AddJournalEntryParams{
-			Amount:      amount,
-			Description: desc,
+	err = queries.SetDebt(
+		ctx, sqlc.SetDebtParams{
+			Amount: currentDebt.Amount + amount,
 			UserID: pgtype.Int4{
 				Int32: pId,
 				Valid: true,
 			},
-		})
+		},
+	)
+
+	if amount > 0 && desc != "" {
+		_, err = queries.AddJournalEntry(
+			ctx, sqlc.AddJournalEntryParams{
+				Amount:      amount,
+				Description: desc,
+				UserID: pgtype.Int4{
+					Int32: pId,
+					Valid: true,
+				},
+			},
+		)
 		if err != nil {
 			return fmt.Errorf("could not add journal entry for player (id:%v): %w", pId, err)
 		}
@@ -191,11 +200,13 @@ func addDebtToPlayer(ctx context.Context, conn db.Connection, name string, amoun
 					return fmt.Errorf("could not delete journal entry for player (id:%v): %w", pId, err)
 				}
 			} else {
-				_, err = queries.UpdateJournalEntry(ctx, sqlc.UpdateJournalEntryParams{
-					Amount:      temp,
-					Description: entry.Description,
-					ID:          entry.ID,
-				})
+				_, err = queries.UpdateJournalEntry(
+					ctx, sqlc.UpdateJournalEntryParams{
+						Amount:      temp,
+						Description: entry.Description,
+						ID:          entry.ID,
+					},
+				)
 				if err != nil {
 					return fmt.Errorf("could not update journal entry for player (id:%v): %w", pId, err)
 				}
