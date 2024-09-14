@@ -186,12 +186,12 @@ func addDebtToPlayer(ctx context.Context, conn db.Connection, name string, amoun
 		for _, entry := range entries {
 			temp += entry.Amount
 			if temp <= 0 {
-				err = conn.Queries().DeleteJournalEntry(ctx, entry.ID)
+				err = queries.DeleteJournalEntry(ctx, entry.ID)
 				if err != nil {
 					return fmt.Errorf("could not delete journal entry for player (id:%v): %w", pId, err)
 				}
 			} else {
-				_, err = conn.Queries().UpdateJournalEntry(ctx, sqlc.UpdateJournalEntryParams{
+				_, err = queries.UpdateJournalEntry(ctx, sqlc.UpdateJournalEntryParams{
 					Amount:      temp,
 					Description: entry.Description,
 					ID:          entry.ID,
