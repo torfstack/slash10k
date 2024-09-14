@@ -42,12 +42,23 @@ func main() {
 			middleware.RequestLoggerConfig{
 				LogStatus: true,
 				LogURI:    true,
+				LogMethod: true,
+				LogError:  true,
 				LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
-					log.Logger.Info().
-						Str("URI", v.URI).
-						Int("status", v.Status).
-						Msg("request")
-
+					if v.Error == nil {
+						log.Logger.Info().
+							Str("URI", v.URI).
+							Int("status", v.Status).
+							Str("method", v.Method).
+							Msg("request")
+					} else {
+						log.Logger.Info().
+							Str("URI", v.URI).
+							Int("status", v.Status).
+							Str("method", v.Method).
+							Str("error", v.Error.Error()).
+							Msg("request")
+					}
 					return nil
 				},
 			},
