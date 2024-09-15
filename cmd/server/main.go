@@ -24,7 +24,7 @@ func main() {
 		return
 	}
 
-	d := db.NewDatabase()
+	d := db.NewDatabase(utils.DefaultConfig().ConnectionString)
 
 	e := echo.New()
 

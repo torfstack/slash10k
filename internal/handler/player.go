@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"slash10k/internal/db"
-	"slash10k/internal/utils"
 	"slash10k/sql/gen"
 	"strings"
 )
@@ -20,7 +19,7 @@ func AddPlayer(d db.Database) func(c echo.Context) error {
 			return c.String(http.StatusBadRequest, "name is required!")
 		}
 
-		conn, err := d.Connect(c.Request().Context(), utils.DefaultConfig().ConnectionString)
+		conn, err := d.Connect(c.Request().Context())
 		if err != nil {
 			log.Err(err).Msg("could not get db connection!")
 			return c.String(http.StatusInternalServerError, "could not get db connection!")
@@ -44,13 +43,15 @@ func AddPlayer(d db.Database) func(c echo.Context) error {
 			log.Err(err).Msg("could not add player!")
 			return c.String(http.StatusInternalServerError, "Could not add player!")
 		}
-		err = conn.Queries().SetDebt(context.Background(), sqlc.SetDebtParams{
-			Amount: 0,
-			UserID: pgtype.Int4{
-				Int32: p.ID,
-				Valid: true,
+		err = conn.Queries().SetDebt(
+			context.Background(), sqlc.SetDebtParams{
+				Amount: 0,
+				UserID: pgtype.Int4{
+					Int32: p.ID,
+					Valid: true,
+				},
 			},
-		})
+		)
 		if err != nil {
 			log.Err(err).Msg("could not add zero debt to player!")
 			return c.String(http.StatusInternalServerError, "Could not add zero debt to player!")
@@ -68,7 +69,7 @@ func DeletePlayer(d db.Database) func(c echo.Context) error {
 			return c.String(http.StatusBadRequest, "name is required!")
 		}
 
-		conn, err := d.Connect(c.Request().Context(), utils.DefaultConfig().ConnectionString)
+		conn, err := d.Connect(c.Request().Context())
 		if err != nil {
 			log.Err(err).Msg("could not get db connection!")
 			return c.String(http.StatusInternalServerError, "could not get db connection!")

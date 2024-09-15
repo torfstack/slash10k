@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"slash10k/internal/db"
 	"slash10k/internal/models"
-	"slash10k/internal/utils"
 )
 
 func GetJournalEntries(d db.Database) func(c echo.Context) error {
@@ -18,7 +17,7 @@ func GetJournalEntries(d db.Database) func(c echo.Context) error {
 		}
 
 		ctx := c.Request().Context()
-		conn, err := d.Connect(ctx, utils.DefaultConfig().ConnectionString)
+		conn, err := d.Connect(ctx)
 		defer func(conn db.Connection, ctx context.Context) {
 			_ = conn.Close(ctx)
 		}(conn, ctx)
@@ -38,11 +37,13 @@ func GetJournalEntries(d db.Database) func(c echo.Context) error {
 
 		var journalEntries models.JournalEntries
 		for _, entry := range entries {
-			journalEntries.Entries = append(journalEntries.Entries, models.JournalEntry{
-				Amount: int(entry.Amount),
-				Reason: entry.Description,
-				Date:   entry.Date.Time.Unix(),
-			})
+			journalEntries.Entries = append(
+				journalEntries.Entries, models.JournalEntry{
+					Amount: int(entry.Amount),
+					Reason: entry.Description,
+					Date:   entry.Date.Time.Unix(),
+				},
+			)
 		}
 
 		return c.JSON(http.StatusOK, journalEntries)
