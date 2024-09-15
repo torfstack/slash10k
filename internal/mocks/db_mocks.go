@@ -43,18 +43,18 @@ func (m *MockDatabase) EXPECT() *MockDatabaseMockRecorder {
 }
 
 // Connect mocks base method.
-func (m *MockDatabase) Connect(arg0 context.Context, arg1 string) (db.Connection, error) {
+func (m *MockDatabase) Connect(arg0 context.Context) (db.Connection, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Connect", arg0, arg1)
+	ret := m.ctrl.Call(m, "Connect", arg0)
 	ret0, _ := ret[0].(db.Connection)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Connect indicates an expected call of Connect.
-func (mr *MockDatabaseMockRecorder) Connect(arg0, arg1 any) *gomock.Call {
+func (mr *MockDatabaseMockRecorder) Connect(arg0 any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connect", reflect.TypeOf((*MockDatabase)(nil).Connect), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Connect", reflect.TypeOf((*MockDatabase)(nil).Connect), arg0)
 }
 
 // MockConnection is a mock of Connection interface.

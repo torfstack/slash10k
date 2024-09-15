@@ -13,7 +13,7 @@ func QueriesMock(c *gomock.Controller) (db.Database, *mockdb.MockQueries) {
 	mockTx := mockdb.NewMockTransaction(c)
 	mockQueries := mockdb.NewMockQueries(c)
 	mockDb.EXPECT().
-		Connect(gomock.Any(), gomock.Any()).
+		Connect(gomock.Any()).
 		MinTimes(1).
 		Return(mockConn, nil)
 	mockConn.EXPECT().

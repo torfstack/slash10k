@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"slash10k/internal/db"
 	"slash10k/internal/models"
-	"slash10k/internal/utils"
 	sqlc "slash10k/sql/gen"
 	frontend "slash10k/templ"
 	"strconv"
@@ -30,7 +29,7 @@ var (
 func AllDebts(d db.Database) func(c echo.Context) error {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
-		conn, err := d.Connect(ctx, utils.DefaultConfig().ConnectionString)
+		conn, err := d.Connect(ctx)
 		defer func(conn db.Connection, ctx context.Context) {
 			_ = conn.Close(ctx)
 		}(conn, ctx)
@@ -122,7 +121,7 @@ func AddDebt(d db.Database) func(c echo.Context) error {
 		}
 
 		ctx := c.Request().Context()
-		conn, err := d.Connect(ctx, utils.DefaultConfig().ConnectionString)
+		conn, err := d.Connect(ctx)
 		if err != nil {
 			log.Err(err).Msg("could not get db connection!")
 			return c.String(500, "could not get db connection!")

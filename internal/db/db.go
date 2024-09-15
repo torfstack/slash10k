@@ -12,7 +12,7 @@ import (
 //go:generate mockgen -destination=../mocks/db_mocks.go -package=mock_db slash10k/internal/db Database,Connection,Queries,Transaction
 
 type Database interface {
-	Connect(ctx context.Context, connectionString string) (Connection, error)
+	Connect(ctx context.Context) (Connection, error)
 }
 
 type Connection interface {
@@ -46,14 +46,15 @@ type Queries interface {
 }
 
 type database struct {
+	connectionString string
 }
 
-func NewDatabase() Database {
-	return &database{}
+func NewDatabase(connectionString string) *database {
+	return &database{connectionString: connectionString}
 }
 
-func (d database) Connect(ctx context.Context, connectionString string) (Connection, error) {
-	conn, err := utils.GetConnection(ctx, connectionString)
+func (d database) Connect(ctx context.Context) (Connection, error) {
+	conn, err := utils.GetConnection(ctx, d.connectionString)
 	if err != nil {
 		return nil, fmt.Errorf("could not establish db connection: %w", err)
 	}

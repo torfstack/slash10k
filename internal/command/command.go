@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"slash10k/internal/db"
-	"slash10k/internal/utils"
 	sqlc "slash10k/sql/gen"
 	_ "time/tzdata"
 
@@ -39,7 +38,7 @@ func updateDebtsMessage(ctx context.Context, s *state.State, d db.Database, c De
 		return
 	}
 
-	conn, err := d.Connect(ctx, utils.DefaultConfig().ConnectionString)
+	conn, err := d.Connect(ctx)
 	if err != nil {
 		log.Error().Msgf("cannot get db connection: %s", err)
 	}

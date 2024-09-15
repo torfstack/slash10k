@@ -70,17 +70,25 @@ func Test_Connection(t *testing.T) {
 		{
 			name: "put bot setups and retrieve most recent one",
 			withConnection: func(t *testing.T, conn Connection, ctx context.Context) {
-				_, _ = conn.Queries().PutBotSetup(ctx, sqlc.PutBotSetupParams{
-					ChannelID: "channel-id-old",
-					MessageID: "message-id-old",
-				})
-				_, _ = conn.Queries().PutBotSetup(ctx, sqlc.PutBotSetupParams{
-					ChannelID: "channel-id",
-					MessageID: "message-id",
-				})
+				_, _ = conn.Queries().PutBotSetup(
+					ctx, sqlc.PutBotSetupParams{
+						ChannelID: "channel-id-old",
+						MessageID: "message-id-old",
+					},
+				)
+				_, _ = conn.Queries().PutBotSetup(
+					ctx, sqlc.PutBotSetupParams{
+						ChannelID: "channel-id",
+						MessageID: "message-id",
+					},
+				)
 				botSetup, _ := conn.Queries().GetBotSetup(ctx)
 				if botSetup.ChannelID != "channel-id" || botSetup.MessageID != "message-id" {
-					t.Fatalf("Expected bot setup to be channel-id, message-id, got %v, %v", botSetup.ChannelID, botSetup.MessageID)
+					t.Fatalf(
+						"Expected bot setup to be channel-id, message-id, got %v, %v",
+						botSetup.ChannelID,
+						botSetup.MessageID,
+					)
 				}
 			},
 		},
@@ -89,22 +97,26 @@ func Test_Connection(t *testing.T) {
 			withConnection: func(t *testing.T, conn Connection, ctx context.Context) {
 				p, _ := conn.Queries().AddPlayer(ctx, "torfstack")
 				for i := range 5 {
-					_, _ = conn.Queries().AddJournalEntry(ctx, sqlc.AddJournalEntryParams{
-						Amount:      int64(i * 10000),
-						Description: fmt.Sprintf("added %v", i*10000),
-						UserID:      IdType(p.ID),
-					})
+					_, _ = conn.Queries().AddJournalEntry(
+						ctx, sqlc.AddJournalEntryParams{
+							Amount:      int64(i * 10000),
+							Description: fmt.Sprintf("added %v", i*10000),
+							UserID:      IdType(p.ID),
+						},
+					)
 				}
 				entries, _ := conn.Queries().GetJournalEntries(ctx, IdType(p.ID))
 				if len(entries) != 5 {
 					t.Fatalf("Expected 5 journal entries, got %d", len(entries))
 				}
 				for i := range 6 {
-					_, _ = conn.Queries().AddJournalEntry(ctx, sqlc.AddJournalEntryParams{
-						Amount:      int64(i * 10000),
-						Description: fmt.Sprintf("added %v", i*10000),
-						UserID:      IdType(p.ID),
-					})
+					_, _ = conn.Queries().AddJournalEntry(
+						ctx, sqlc.AddJournalEntryParams{
+							Amount:      int64(i * 10000),
+							Description: fmt.Sprintf("added %v", i*10000),
+							UserID:      IdType(p.ID),
+						},
+					)
 				}
 				entries2, _ := conn.Queries().GetJournalEntries(ctx, IdType(p.ID))
 				if len(entries2) > 10 {
@@ -116,16 +128,20 @@ func Test_Connection(t *testing.T) {
 			name: "update journal entry and retrieve it",
 			withConnection: func(t *testing.T, conn Connection, ctx context.Context) {
 				p, _ := conn.Queries().AddPlayer(ctx, "torfstack")
-				j, _ := conn.Queries().AddJournalEntry(ctx, sqlc.AddJournalEntryParams{
-					Amount:      int64(10000),
-					Description: fmt.Sprintf("added %v", 10000),
-					UserID:      IdType(p.ID),
-				})
-				_, _ = conn.Queries().UpdateJournalEntry(ctx, sqlc.UpdateJournalEntryParams{
-					Amount:      int64(25000),
-					Description: fmt.Sprintf("added %v", 25000),
-					ID:          j.ID,
-				})
+				j, _ := conn.Queries().AddJournalEntry(
+					ctx, sqlc.AddJournalEntryParams{
+						Amount:      int64(10000),
+						Description: fmt.Sprintf("added %v", 10000),
+						UserID:      IdType(p.ID),
+					},
+				)
+				_, _ = conn.Queries().UpdateJournalEntry(
+					ctx, sqlc.UpdateJournalEntryParams{
+						Amount:      int64(25000),
+						Description: fmt.Sprintf("added %v", 25000),
+						ID:          j.ID,
+					},
+				)
 				entries, _ := conn.Queries().GetJournalEntries(ctx, IdType(p.ID))
 				if len(entries) != 1 || entries[0].Amount != 25000 {
 					t.Fatalf("Expected journal entry to be 25000, got %d", entries[0].Amount)
@@ -158,43 +174,51 @@ func Test_Connection(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Could not get connection string: %s", err)
 	}
-	t.Cleanup(func() {
-		err = cont.Terminate(ctx)
-		if err != nil {
-			t.Fatalf("Could not terminate database: %s", err)
-		}
-	})
+	t.Cleanup(
+		func() {
+			err = cont.Terminate(ctx)
+			if err != nil {
+				t.Fatalf("Could not terminate database: %s", err)
+			}
+		},
+	)
 
 	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			t.Cleanup(func() {
-				if err = cont.Restore(ctx); err != nil {
-					t.Fatalf("Could not restore database: %s", err)
+		t.Run(
+			tc.name, func(t *testing.T) {
+				t.Cleanup(
+					func() {
+						if err = cont.Restore(ctx); err != nil {
+							t.Fatalf("Could not restore database: %s", err)
+						}
+					},
+				)
+
+				d := NewDatabase(connStr)
+				conn, err := d.Connect(ctx)
+				if err != nil {
+					t.Fatalf("Could not get connection: %s", err)
 				}
-			})
+				defer conn.Close(context.Background())
 
-			d := NewDatabase()
-			conn, err := d.Connect(ctx, connStr)
-			if err != nil {
-				t.Fatalf("Could not get connection: %s", err)
-			}
-			defer conn.Close(context.Background())
-
-			tc.withConnection(t, conn, ctx)
-		})
+				tc.withConnection(t, conn, ctx)
+			},
+		)
 	}
 }
 
 func setupDatabase(t *testing.T) (*postgres.PostgresContainer, error) {
 	ctx := context.Background()
 
-	postgresContainer, err := postgres.RunContainer(ctx,
+	postgresContainer, err := postgres.RunContainer(
+		ctx,
 		testcontainers.WithImage("docker.io/postgres:16.2-alpine"),
 		postgres.WithDatabase("test"),
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").
 				WithOccurrence(2).
-				WithStartupTimeout(5*time.Second)),
+				WithStartupTimeout(5*time.Second),
+		),
 	)
 
 	if err != nil {

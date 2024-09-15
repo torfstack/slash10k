@@ -9,7 +9,6 @@ import (
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/rs/zerolog/log"
 	"slash10k/internal/db"
-	"slash10k/internal/utils"
 	sqlc "slash10k/sql/gen"
 )
 
@@ -81,7 +80,7 @@ func SetChannel(s *state.State, d db.Database, c DebtClient) func(
 			return ephemeralMessage("Could not send message")
 		}
 		messageId := m.ID
-		conn, err := d.Connect(ctx, utils.DefaultConfig().ConnectionString)
+		conn, err := d.Connect(ctx)
 		if err != nil {
 			log.Error().Msgf("cannot get db connection: %s", err)
 			return ephemeralMessage("Could not get db connection")
