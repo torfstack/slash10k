@@ -5,7 +5,6 @@ import (
 	"os"
 	"slash10k/internal/db"
 	"slash10k/internal/handler"
-	"slash10k/internal/utils"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -18,13 +17,13 @@ import (
 func main() {
 	setupLogger()
 
-	err := db.Migrate(context.Background(), utils.DefaultConfig().ConnectionString)
+	err := db.Migrate(context.Background(), db.DefaultConfig().ConnectionString)
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not run database migrations")
 		return
 	}
 
-	d := db.NewDatabase(utils.DefaultConfig().ConnectionString)
+	d := db.NewDatabase(db.DefaultConfig().ConnectionString)
 
 	e := echo.New()
 

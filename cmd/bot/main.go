@@ -8,7 +8,6 @@ import (
 	"os"
 	"slash10k/internal/command"
 	"slash10k/internal/db"
-	"slash10k/internal/utils"
 	"strings"
 
 	"github.com/diamondburned/arikawa/v3/api"
@@ -73,7 +72,7 @@ func main() {
 		log.Fatal().Err(err).Msg("could not setup command")
 	}
 
-	d := db.NewDatabase(utils.DefaultConfig().ConnectionString)
+	d := db.NewDatabase(db.DefaultConfig().ConnectionString)
 	c := command.NewClient()
 
 	r.AddFunc("10kup", command.SetChannel(s, d, c))

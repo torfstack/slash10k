@@ -13,6 +13,10 @@ import (
 )
 
 func Test_Connection(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping db test")
+		return
+	}
 	type test struct {
 		name           string
 		withConnection func(*testing.T, Connection, context.Context)
@@ -199,7 +203,9 @@ func Test_Connection(t *testing.T) {
 				if err != nil {
 					t.Fatalf("Could not get connection: %s", err)
 				}
-				defer conn.Close(context.Background())
+				defer func(conn Connection, ctx context.Context) {
+					_ = conn.Close(ctx)
+				}(conn, context.Background())
 
 				tc.withConnection(t, conn, ctx)
 			},

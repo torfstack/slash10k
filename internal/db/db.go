@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"slash10k/internal/utils"
 	sqlc "slash10k/sql/gen"
 )
 
@@ -49,12 +48,12 @@ type database struct {
 	connectionString string
 }
 
-func NewDatabase(connectionString string) *database {
+func NewDatabase(connectionString string) Database {
 	return &database{connectionString: connectionString}
 }
 
 func (d database) Connect(ctx context.Context) (Connection, error) {
-	conn, err := utils.GetConnection(ctx, d.connectionString)
+	conn, err := GetConnection(ctx, d.connectionString)
 	if err != nil {
 		return nil, fmt.Errorf("could not establish db connection: %w", err)
 	}
