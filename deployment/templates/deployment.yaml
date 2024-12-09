@@ -20,7 +20,7 @@ spec:
           image: {{ .Values.image.name }}:{{ .Values.image.tag }}
           ports:
             - containerPort: 3000
-              hostPort: 3330
+              hostPort: {{ .Values.port }}
           env:
             - name: DATABASE_CONNECTION_HOST
               value: {{ .Values.database.host }}
@@ -67,7 +67,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: slash10k
-                  key: discord-token
+                  key: {{ .Values.discordTokenSecretName }}
             - name: VERSION
               value: {{ .Values.botImage.tag }}
       imagePullSecrets:

@@ -9,23 +9,18 @@ import (
 )
 
 type BotSetup struct {
-	ChannelID string
-	MessageID string
-	CreatedAt pgtype.Timestamp
-}
-
-type Char struct {
-	ID     int32
-	Name   string
-	Class  string
-	UserID pgtype.Int4
+	GuildID               string
+	ChannelID             string
+	RegistrationMessageID string
+	DebtsMessageID        string
+	CreatedAt             pgtype.Timestamp
 }
 
 type Debt struct {
 	ID          int32
 	Amount      int64
 	LastUpdated pgtype.Timestamp
-	UserID      pgtype.Int4
+	UserID      int32
 }
 
 type DebtJournal struct {
@@ -33,10 +28,13 @@ type DebtJournal struct {
 	Amount      int64
 	Description string
 	Date        pgtype.Timestamp
-	UserID      pgtype.Int4
+	UserID      int32
 }
 
 type Player struct {
-	ID   int32
-	Name string
+	ID          int32
+	DiscordID   string
+	DiscordName string
+	GuildID     string
+	Name        string
 }

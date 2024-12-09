@@ -1,4 +1,4 @@
-package db
+package db_test
 
 import (
 	"context"
@@ -6,6 +6,8 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
+	"slash10k/pkg/db"
+	"slash10k/pkg/testutil"
 	sqlc "slash10k/sql/gen"
 	"slices"
 	"testing"
@@ -19,16 +21,16 @@ func Test_Connection(t *testing.T) {
 	}
 	type test struct {
 		name           string
-		withConnection func(*testing.T, Connection, context.Context)
+		withConnection func(*testing.T, db.Connection, context.Context)
 	}
 	tests := []test{
 		{
 			name: "can add players and get correct total",
-			withConnection: func(t *testing.T, conn Connection, ctx context.Context) {
-				p1, _ := conn.Queries().AddPlayer(ctx, "torfstack")
-				p2, _ := conn.Queries().AddPlayer(ctx, "neruh")
-				id1, _ := conn.Queries().GetIdOfPlayer(ctx, "torfstack")
-				id2, _ := conn.Queries().GetIdOfPlayer(ctx, "neruh")
+			withConnection: func(t *testing.T, conn db.Connection, ctx context.Context) {
+				p1, _ := conn.Queries().AddPlayer(ctx, testutil.AddPlayerParams("torfstack"))
+				p2, _ := conn.Queries().AddPlayer(ctx, testutil.AddPlayerParams("neruh"))
+				id1, _ := conn.Queries().GetIdOfPlayer(ctx, testutil.GetIdOfPlayerParams("torfstack"))
+				id2, _ := conn.Queries().GetIdOfPlayer(ctx, testutil.GetIdOfPlayerParams("neruh"))
 				if p1.ID != id1 || p2.ID != id2 {
 					t.Fatalf("Expected IDs to match, got %v!=%v or %v!=%v", p1.ID, id1, p2.ID, id2)
 				}
@@ -40,11 +42,11 @@ func Test_Connection(t *testing.T) {
 		},
 		{
 			name: "can set debt on player and retrieve it",
-			withConnection: func(t *testing.T, conn Connection, ctx context.Context) {
-				p, e := conn.Queries().AddPlayer(ctx, "torfstack")
-				e = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{Amount: 30000, UserID: IdType(p.ID)})
-				e = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{Amount: 50000, UserID: IdType(p.ID)})
-				d, e := conn.Queries().GetDebt(ctx, IdType(p.ID))
+			withConnection: func(t *testing.T, conn db.Connection, ctx context.Context) {
+				p, e := conn.Queries().AddPlayer(ctx, testutil.AddPlayerParams("torfstack"))
+				e = conn.Queries().SetDebt(ctx, testutil.SetDebtParams(p.ID, 30000))
+				e = conn.Queries().SetDebt(ctx, testutil.SetDebtParams(p.ID, 50000))
+				d, e := conn.Queries().GetDebt(ctx, p.ID)
 				if d.Amount != 50000 || e != nil {
 					t.Fatalf("Expected debt of 50000, got %d", d.Amount)
 				}
@@ -52,14 +54,14 @@ func Test_Connection(t *testing.T) {
 		},
 		{
 			name: "adding debts to multiple players and retrieving",
-			withConnection: func(t *testing.T, conn Connection, ctx context.Context) {
-				p1, _ := conn.Queries().AddPlayer(ctx, "torfstack")
-				p2, _ := conn.Queries().AddPlayer(ctx, "neruh")
-				p3, _ := conn.Queries().AddPlayer(ctx, "scurvy")
-				_ = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{Amount: 30000, UserID: IdType(p1.ID)})
-				_ = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{Amount: 50000, UserID: IdType(p2.ID)})
-				_ = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{Amount: 80000, UserID: IdType(p3.ID)})
-				allDebts, _ := conn.Queries().GetAllDebts(ctx)
+			withConnection: func(t *testing.T, conn db.Connection, ctx context.Context) {
+				p1, _ := conn.Queries().AddPlayer(ctx, testutil.AddPlayerParams("torfstack"))
+				p2, _ := conn.Queries().AddPlayer(ctx, testutil.AddPlayerParams("neruh"))
+				p3, _ := conn.Queries().AddPlayer(ctx, testutil.AddPlayerParams("scurvy"))
+				_ = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{Amount: 30000, UserID: p1.ID})
+				_ = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{Amount: 50000, UserID: p2.ID})
+				_ = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{Amount: 80000, UserID: p3.ID})
+				allDebts, _ := conn.Queries().GetAllDebts(ctx, testutil.GetAllDebtsParams())
 				if len(allDebts) != 3 {
 					t.Fatalf("Expected 3 debts, got %d", len(allDebts))
 				}
@@ -72,44 +74,52 @@ func Test_Connection(t *testing.T) {
 			},
 		},
 		{
-			name: "put bot setups and retrieve most recent one",
-			withConnection: func(t *testing.T, conn Connection, ctx context.Context) {
-				_, _ = conn.Queries().PutBotSetup(
+			name: "put bot setup and retrieve",
+			withConnection: func(t *testing.T, conn db.Connection, ctx context.Context) {
+				_, err := conn.Queries().PutBotSetup(
 					ctx, sqlc.PutBotSetupParams{
-						ChannelID: "channel-id-old",
-						MessageID: "message-id-old",
+						GuildID:               testutil.TestGuildIdString(),
+						ChannelID:             "channel-id",
+						DebtsMessageID:        "debts-message-id",
+						RegistrationMessageID: "registration-message-id",
 					},
 				)
-				_, _ = conn.Queries().PutBotSetup(
-					ctx, sqlc.PutBotSetupParams{
-						ChannelID: "channel-id",
-						MessageID: "message-id",
-					},
-				)
-				botSetup, _ := conn.Queries().GetBotSetup(ctx)
-				if botSetup.ChannelID != "channel-id" || botSetup.MessageID != "message-id" {
+				if err != nil {
+					t.Fatalf("Could not put bot setup: %s", err)
+				}
+				botSetup, err := conn.Queries().GetBotSetup(ctx, testutil.GetBotSetupParams())
+				if err != nil {
+					t.Fatalf("Could not get bot setup: %s", err)
+				}
+				if botSetup.ChannelID != "channel-id" ||
+					botSetup.GuildID != testutil.TestGuildIdString() ||
+					botSetup.DebtsMessageID != "debts-message-id" ||
+					botSetup.RegistrationMessageID != "registration-message-id" {
 					t.Fatalf(
-						"Expected bot setup to be channel-id, message-id, got %v, %v",
+						"Expected bot setup to be %v, channel-id, debts-message-id, registration-message-id, got %v, %v, %v, %v",
+						testutil.TestGuildIdString(),
+						botSetup.GuildID,
 						botSetup.ChannelID,
-						botSetup.MessageID,
+						botSetup.DebtsMessageID,
+						botSetup.RegistrationMessageID,
 					)
 				}
 			},
 		},
 		{
 			name: "add more than 10 journal entries and retrieve them",
-			withConnection: func(t *testing.T, conn Connection, ctx context.Context) {
-				p, _ := conn.Queries().AddPlayer(ctx, "torfstack")
+			withConnection: func(t *testing.T, conn db.Connection, ctx context.Context) {
+				p, _ := conn.Queries().AddPlayer(ctx, testutil.AddPlayerParams("torfstack"))
 				for i := range 5 {
 					_, _ = conn.Queries().AddJournalEntry(
 						ctx, sqlc.AddJournalEntryParams{
 							Amount:      int64(i * 10000),
 							Description: fmt.Sprintf("added %v", i*10000),
-							UserID:      IdType(p.ID),
+							UserID:      p.ID,
 						},
 					)
 				}
-				entries, _ := conn.Queries().GetJournalEntries(ctx, IdType(p.ID))
+				entries, _ := conn.Queries().GetJournalEntries(ctx, p.ID)
 				if len(entries) != 5 {
 					t.Fatalf("Expected 5 journal entries, got %d", len(entries))
 				}
@@ -118,11 +128,11 @@ func Test_Connection(t *testing.T) {
 						ctx, sqlc.AddJournalEntryParams{
 							Amount:      int64(i * 10000),
 							Description: fmt.Sprintf("added %v", i*10000),
-							UserID:      IdType(p.ID),
+							UserID:      p.ID,
 						},
 					)
 				}
-				entries2, _ := conn.Queries().GetJournalEntries(ctx, IdType(p.ID))
+				entries2, _ := conn.Queries().GetJournalEntries(ctx, p.ID)
 				if len(entries2) > 10 {
 					t.Fatalf("Expected 10 journal entries, got %d", len(entries))
 				}
@@ -130,13 +140,13 @@ func Test_Connection(t *testing.T) {
 		},
 		{
 			name: "update journal entry and retrieve it",
-			withConnection: func(t *testing.T, conn Connection, ctx context.Context) {
-				p, _ := conn.Queries().AddPlayer(ctx, "torfstack")
+			withConnection: func(t *testing.T, conn db.Connection, ctx context.Context) {
+				p, _ := conn.Queries().AddPlayer(ctx, testutil.AddPlayerParams("torfstack"))
 				j, _ := conn.Queries().AddJournalEntry(
 					ctx, sqlc.AddJournalEntryParams{
 						Amount:      int64(10000),
 						Description: fmt.Sprintf("added %v", 10000),
-						UserID:      IdType(p.ID),
+						UserID:      p.ID,
 					},
 				)
 				_, _ = conn.Queries().UpdateJournalEntry(
@@ -146,17 +156,20 @@ func Test_Connection(t *testing.T) {
 						ID:          j.ID,
 					},
 				)
-				entries, _ := conn.Queries().GetJournalEntries(ctx, IdType(p.ID))
+				entries, _ := conn.Queries().GetJournalEntries(ctx, p.ID)
 				if len(entries) != 1 || entries[0].Amount != 25000 {
 					t.Fatalf("Expected journal entry to be 25000, got %d", entries[0].Amount)
 				}
 			},
 		},
 		{
-			name: "can not add player with same name twice",
-			withConnection: func(t *testing.T, conn Connection, ctx context.Context) {
-				_, _ = conn.Queries().AddPlayer(ctx, "torfstack")
-				_, e := conn.Queries().AddPlayer(ctx, "torfstack")
+			name: "can not add player with same name discord_id and guild_id twice",
+			withConnection: func(t *testing.T, conn db.Connection, ctx context.Context) {
+				_, e := conn.Queries().AddPlayer(ctx, testutil.AddPlayerParams("torfstack"))
+				if e != nil {
+					t.Fatalf("Could not add player: %s", e)
+				}
+				_, e = conn.Queries().AddPlayer(ctx, testutil.AddPlayerParams("torfstack"))
 				if e == nil {
 					t.Fatalf("Expected error, got nil")
 				}
@@ -198,12 +211,12 @@ func Test_Connection(t *testing.T) {
 					},
 				)
 
-				d := NewDatabase(connStr)
+				d := db.NewDatabase(connStr)
 				conn, err := d.Connect(ctx)
 				if err != nil {
 					t.Fatalf("Could not get connection: %s", err)
 				}
-				defer func(conn Connection, ctx context.Context) {
+				defer func(conn db.Connection, ctx context.Context) {
 					_ = conn.Close(ctx)
 				}(conn, context.Background())
 
@@ -238,7 +251,7 @@ func setupDatabase(t *testing.T) (*postgres.PostgresContainer, error) {
 		return nil, err
 	}
 
-	err = Migrate(ctx, connectionString, WithMigrationsDir("../../sql/migrations"))
+	err = db.Migrate(ctx, connectionString, db.WithMigrationsDir("../../sql/migrations"))
 	if err != nil {
 		t.Fatalf("Could not run migrations: %s", err)
 		return nil, err

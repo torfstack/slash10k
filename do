@@ -4,34 +4,11 @@ build() {
   check_installed "go"
 
   gen
-  build_server
-  build_bot
-}
-
-build_server() {
-  CGO_ENABLED=0 GOOS=linux go build -o bin/slash10k-server cmd/server/main.go
+  CGO_ENABLED=0 GOOS=linux go build -o bin/slash10k cmd/bot/main.go
   version=$(cat version)
   echo "Building slash10k:$version"
-  docker buildx build . -f Dockerfile -t ghcr.io/torfstack/slash10k:"$version"
+  docker buildx build . -f Dockerfile-t ghcr.io/torfstack/slash10k:"$version"
   docker push ghcr.io/torfstack/slash10k:"$version"
-}
-
-build_bot() {
-  CGO_ENABLED=0 GOOS=linux go build -o bin/slash10k-bot cmd/bot/main.go
-  version=$(cat version)
-  echo "Building slash10k-bot:$version"
-  docker buildx build . -f Dockerfile-bot -t ghcr.io/torfstack/slash10k-bot:"$version"
-  docker push ghcr.io/torfstack/slash10k-bot:"$version"
-}
-
-run() {
-  check_installed "air"
-  echo "Running..."
-  DATABASE_CONNECTION_HOST=localhost \
-    DATABASE_CONNECTION_PORT=5432 \
-    DATABASE_CONNECTION_USER=postgres \
-    DATABASE_CONNECTION_PASSWORD=mysecretpassword \
-    DATABASE_CONNECTION_DBNAME=scurvy10k air
 }
 
 gen() {
@@ -64,23 +41,29 @@ start() {
     clean)
       clean
       ;;
-    deploy)
-      deploy
+    deploy_dev)
+      deploy_dev
       ;;
-    run)
-      run
+    deploy_prod)
+      deploy_prod
       ;;
     *)
-      echo "Usage: do [build|clean|db_apply|db_migrate|db_status|deploy|gen|run]"
+      echo "Usage: do [build|clean|deploy_dev|deploy_prod|gen]"
       exit 1
       ;;
   esac
 }
 
-deploy() {
+deploy_dev() {
   check_installed "helm"
-  echo "Deploying..."
-  helm upgrade --install slash10k deployment --values deployment/values.yaml -f deployment/values.yaml -n default
+  echo "Deploying DEV ..."
+  helm upgrade --install slash10kdev deployment --values deployment/values-dev.yaml -f deployment/values-dev.yaml -n default
+}
+
+deploy_prod() {
+  check_installed "helm"
+  echo "Deploying PROD ..."
+  helm upgrade --install slash10k deployment --values deployment/values-prod.yaml -f deployment/values-prod.yaml -n default
 }
 
 check_installed() {

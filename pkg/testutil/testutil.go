@@ -2,8 +2,10 @@ package testutil
 
 import (
 	"go.uber.org/mock/gomock"
-	"slash10k/internal/db"
-	mockdb "slash10k/internal/mocks"
+	"slash10k/pkg/config"
+	"slash10k/pkg/db"
+	mockdb "slash10k/pkg/mocks"
+	sqlc "slash10k/sql/gen"
 	"testing"
 )
 
@@ -43,4 +45,37 @@ func WithoutError(t *testing.T, a interface{}, err error) {
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
+}
+
+func TestGuildIdString() string {
+	return string(config.TorfstackServerGuildIdString)
+}
+
+func AddPlayerParams(discordId string) sqlc.AddPlayerParams {
+	return sqlc.AddPlayerParams{
+		DiscordID: discordId,
+		GuildID:   TestGuildIdString(),
+	}
+}
+
+func SetDebtParams(id int32, amount int64) sqlc.SetDebtParams {
+	return sqlc.SetDebtParams{
+		Amount: amount,
+		UserID: id,
+	}
+}
+
+func GetIdOfPlayerParams(discordId string) sqlc.GetIdOfPlayerParams {
+	return sqlc.GetIdOfPlayerParams{
+		DiscordID: discordId,
+		GuildID:   TestGuildIdString(),
+	}
+}
+
+func GetAllDebtsParams() string {
+	return TestGuildIdString()
+}
+
+func GetBotSetupParams() string {
+	return TestGuildIdString()
 }
