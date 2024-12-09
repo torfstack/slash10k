@@ -7,7 +7,7 @@ build() {
   CGO_ENABLED=0 GOOS=linux go build -o bin/slash10k cmd/bot/main.go
   version=$(cat version)
   echo "Building slash10k:$version"
-  docker buildx build . -f Dockerfile-t ghcr.io/torfstack/slash10k:"$version"
+  docker buildx build . -f Dockerfile -t ghcr.io/torfstack/slash10k:"$version"
   docker push ghcr.io/torfstack/slash10k:"$version"
 }
 

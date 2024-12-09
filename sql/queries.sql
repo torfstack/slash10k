@@ -39,13 +39,13 @@ INSERT INTO player (
 -- name: GetPlayer :many
 SELECT sqlc.embed(player), sqlc.embed(debt), sqlc.embed(debt_journal) FROM player
 JOIN debt ON player.id = debt.user_id
-JOIN debt_journal ON player.id = debt_journal.user_id
+LEFT JOIN debt_journal ON player.id = debt_journal.user_id
 WHERE player.discord_id = $1 AND player.guild_id = $2;
 
 -- name: GetAllPlayers :many
 SELECT sqlc.embed(player), sqlc.embed(debt), sqlc.embed(debt_journal) FROM player
 JOIN debt ON player.id = debt.user_id
-JOIN debt_journal ON player.id = debt_journal.user_id
+LEFT JOIN debt_journal ON player.id = debt_journal.user_id
 WHERE guild_id = $1;
 
 -- name: DeletePlayer :exec

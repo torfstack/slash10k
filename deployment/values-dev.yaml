@@ -1,6 +1,5 @@
 appName: "slash10k-dev"
 namespace: "default"
-port: 3331
 logLevel: "info"
 
 database:
@@ -11,10 +10,6 @@ database:
 
 image:
   name: ghcr.io/torfstack/slash10k
-  tag: 0.5.11
-
-botImage:
-  name: ghcr.io/torfstack/slash10k-bot
-  tag: 0.5.11
+  tag: 0.5.17
 
 discordTokenSecretName: "discord-token-dev"

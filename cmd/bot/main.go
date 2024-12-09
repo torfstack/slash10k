@@ -63,12 +63,11 @@ func main() {
 	}
 	messageLookup := domain.NewMessageLookup(fromdb.FromBotSetups(botSetups))
 
-	c := command.NewClient()
 	service := domain.NewSlashTenK(d)
 
 	command.RegisterDiscordHandlers(s, service, messageLookup)
 
-	r.AddFunc("10kup", command.SetChannel(s, d, c, messageLookup))
+	r.AddFunc("10kup", command.SetChannel(s, service, messageLookup))
 
 	if err := cmdroute.OverwriteCommands(s, commands); err != nil {
 		log.Fatal().Msgf("cannot update commands: %s", err)

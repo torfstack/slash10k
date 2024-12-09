@@ -1,12 +1,12 @@
 package fromdb
 
 import (
-	"slash10k/pkg/domain"
+	"slash10k/pkg/models"
 	sqlc "slash10k/sql/gen"
 )
 
-func FromPlayerWithoutDebt(player sqlc.Player) domain.Player {
-	return domain.Player{
+func FromPlayerWithoutDebt(player sqlc.Player) models.Player {
+	return models.Player{
 		Id:          player.ID,
 		DiscordId:   player.DiscordID,
 		DiscordName: player.DiscordName,
@@ -15,39 +15,39 @@ func FromPlayerWithoutDebt(player sqlc.Player) domain.Player {
 	}
 }
 
-func FromPlayerWithDebt(playerWithDebt []sqlc.GetPlayerRow) domain.Player {
+func FromPlayerWithDebt(playerWithDebt []sqlc.GetPlayerRow) models.Player {
 	player := FromPlayerWithoutDebt(playerWithDebt[0].Player)
 	player.Debt = FromDebt(playerWithDebt[0].Debt)
-	player.DebtJournal = make([]domain.DebtJournalEntry, len(playerWithDebt))
+	player.DebtJournal = make([]models.DebtJournalEntry, len(playerWithDebt))
 	for i, row := range playerWithDebt {
 		player.DebtJournal[i] = FromDebtJournal(row.DebtJournal)
 	}
 	return player
 }
 
-func FromAllPlayers(allPlayers []sqlc.GetAllPlayersRow) []domain.Player {
-	players := make(map[string]domain.Player, len(allPlayers))
+func FromAllPlayers(allPlayers []sqlc.GetAllPlayersRow) []models.Player {
+	players := make(map[string]models.Player, len(allPlayers))
 	for _, row := range allPlayers {
 		p, ok := players[row.Player.DiscordID]
 		if !ok {
 			p = FromPlayerWithoutDebt(row.Player)
 			p.Debt = FromDebt(row.Debt)
-			p.DebtJournal = make([]domain.DebtJournalEntry, 10)
+			p.DebtJournal = make([]models.DebtJournalEntry, 10)
 			p.DebtJournal[0] = FromDebtJournal(row.DebtJournal)
 			players[row.Player.DiscordID] = p
 		} else {
 			p.DebtJournal = append(p.DebtJournal, FromDebtJournal(row.DebtJournal))
 		}
 	}
-	res := make([]domain.Player, len(players))
+	res := make([]models.Player, len(players))
 	for _, player := range players {
 		res = append(res, player)
 	}
 	return res
 }
 
-func FromDebt(debt sqlc.Debt) domain.Debt {
-	return domain.Debt{
+func FromDebt(debt sqlc.Debt) models.Debt {
+	return models.Debt{
 		Id:          debt.ID,
 		Amount:      debt.Amount,
 		LastUpdated: debt.LastUpdated.Time.Unix(),
@@ -55,8 +55,8 @@ func FromDebt(debt sqlc.Debt) domain.Debt {
 	}
 }
 
-func FromDebtJournal(debtJournal sqlc.DebtJournal) domain.DebtJournalEntry {
-	return domain.DebtJournalEntry{
+func FromDebtJournal(debtJournal sqlc.DebtJournal) models.DebtJournalEntry {
+	return models.DebtJournalEntry{
 		Id:          debtJournal.ID,
 		Amount:      debtJournal.Amount,
 		Description: debtJournal.Description,
@@ -65,8 +65,8 @@ func FromDebtJournal(debtJournal sqlc.DebtJournal) domain.DebtJournalEntry {
 	}
 }
 
-func FromBotSetup(botSetup sqlc.BotSetup) domain.BotSetup {
-	return domain.BotSetup{
+func FromBotSetup(botSetup sqlc.BotSetup) models.BotSetup {
+	return models.BotSetup{
 		GuildId:               botSetup.GuildID,
 		ChannelId:             botSetup.ChannelID,
 		RegistrationMessageId: botSetup.RegistrationMessageID,
@@ -74,8 +74,8 @@ func FromBotSetup(botSetup sqlc.BotSetup) domain.BotSetup {
 	}
 }
 
-func FromBotSetups(botSetups []sqlc.BotSetup) []domain.BotSetup {
-	botSetupsConverted := make([]domain.BotSetup, len(botSetups))
+func FromBotSetups(botSetups []sqlc.BotSetup) []models.BotSetup {
+	botSetupsConverted := make([]models.BotSetup, len(botSetups))
 	for i, botSetup := range botSetups {
 		botSetupsConverted[i] = FromBotSetup(botSetup)
 	}

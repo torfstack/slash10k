@@ -1,8 +1,10 @@
 package domain
 
+import "slash10k/pkg/models"
+
 type MessageLookup interface {
 	IsRegistrationMessage(messageId string) bool
-	AddSetup(botSetup BotSetup)
+	AddSetup(botSetup models.BotSetup)
 }
 
 type messageLookup struct {
@@ -12,7 +14,7 @@ type messageLookup struct {
 var _ MessageLookup = (*messageLookup)(nil)
 
 func NewMessageLookup(
-	botSetups []BotSetup,
+	botSetups []models.BotSetup,
 ) *messageLookup {
 	m := messageLookup{}
 	m.table = make(map[string]any)
@@ -27,6 +29,6 @@ func (m *messageLookup) IsRegistrationMessage(messageId string) bool {
 	return ok
 }
 
-func (m *messageLookup) AddSetup(botSetup BotSetup) {
+func (m *messageLookup) AddSetup(botSetup models.BotSetup) {
 	m.table[botSetup.RegistrationMessageId] = struct{}{}
 }

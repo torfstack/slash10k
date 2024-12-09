@@ -2,12 +2,12 @@ package todb
 
 import (
 	"github.com/jackc/pgx/v5/pgtype"
-	"slash10k/pkg/domain"
+	"slash10k/pkg/models"
 	sqlc "slash10k/sql/gen"
 	"time"
 )
 
-func ToPlayer(player domain.Player) sqlc.Player {
+func ToPlayer(player models.Player) sqlc.Player {
 	return sqlc.Player{
 		ID:          player.Id,
 		DiscordID:   player.DiscordId,
@@ -17,7 +17,7 @@ func ToPlayer(player domain.Player) sqlc.Player {
 	}
 }
 
-func ToDebt(debt domain.Debt) sqlc.Debt {
+func ToDebt(debt models.Debt) sqlc.Debt {
 	return sqlc.Debt{
 		ID:     debt.Id,
 		Amount: debt.Amount,
@@ -29,7 +29,7 @@ func ToDebt(debt domain.Debt) sqlc.Debt {
 	}
 }
 
-func ToDebtJournal(debtJournal domain.DebtJournalEntry) sqlc.DebtJournal {
+func ToDebtJournal(debtJournal models.DebtJournalEntry) sqlc.DebtJournal {
 	return sqlc.DebtJournal{
 		ID:          debtJournal.Id,
 		Amount:      debtJournal.Amount,

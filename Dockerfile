@@ -1,9 +1,11 @@
-FROM alpine:3.19.1
 
-RUN mkdir /opt/slash10k-bot
 
-WORKDIR /opt/slash10k-bot
+FROM alpine:3.21.0
 
-COPY /bin/slash10k-bot slash10k-bot
+RUN mkdir /opt/slash10k
 
-CMD ["./slash10k-bot"]
+WORKDIR /opt/slash10k
+
+COPY /bin/slash10k slash10k
+
+CMD ["./slash10k"]

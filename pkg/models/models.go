@@ -1,20 +1,35 @@
 package models
 
-type PlayerDebt struct {
-	Name   string `json:"name"`
-	Amount string `json:"amount"`
+type Player struct {
+	Id          int32
+	DiscordId   string
+	DiscordName string
+	GuildId     string
+	Name        string
+	Debt        Debt
+	DebtJournal []DebtJournalEntry
 }
 
-type AllDebtsResponse struct {
-	Debts []PlayerDebt `json:"debts"`
+type Debt struct {
+	Id          int32
+	Amount      int64
+	LastUpdated int64
+	UserId      int32
+	GuildId     string
 }
 
-type JournalEntries struct {
-	Entries []JournalEntry `json:"entries"`
+type DebtJournalEntry struct {
+	Id          int32
+	Amount      int64
+	Description string
+	Date        int64
+	UserId      int32
+	GuildId     string
 }
 
-type JournalEntry struct {
-	Amount int    `json:"amount"`
-	Reason string `json:"reason"`
-	Date   int64  `json:"date"`
+type BotSetup struct {
+	GuildId               string
+	ChannelId             string
+	RegistrationMessageId string
+	DebtsMessageId        string
 }

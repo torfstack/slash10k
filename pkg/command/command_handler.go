@@ -15,13 +15,13 @@ func RegisterDiscordHandlers(s *state.State, service domain.Service, lookup doma
 			ctx := context.Background()
 			isRegistrationMessage := lookup.IsRegistrationMessage(event.MessageID.String())
 			if isRegistrationMessage {
-				log.Info().Msg("reaction added on registration message")
+				log.Info().Msgf("reaction %s added on registration message", event.Emoji.Name)
 				err := service.AddPlayer(
 					ctx,
 					event.UserID.String(),
 					event.Member.User.Username,
-					event.Member.User.DisplayName,
 					event.GuildID.String(),
+					event.Member.User.DisplayName,
 				)
 				if err != nil && !errors.Is(err, domain.ErrPlayerAlreadyExists) {
 					log.Error().Msgf("could not add player: %s", err)
@@ -30,20 +30,20 @@ func RegisterDiscordHandlers(s *state.State, service domain.Service, lookup doma
 					log.Warn().Msgf("could not add player: %s", err)
 					return
 				}
-				updateDebtsMessage(ctx, s, d, c, event.GuildID.String())
+				updateDebtsMessage(ctx, s, service, event.GuildID.String())
 			}
 		},
 	)
 	s.AddHandler(
-		func(g *gateway.MessageReactionRemoveEvent) {
+		func(event *gateway.MessageReactionRemoveEvent) {
 			ctx := context.Background()
-			isRegistrationMessage := lookup.IsRegistrationMessage(g.MessageID.String())
+			isRegistrationMessage := lookup.IsRegistrationMessage(event.MessageID.String())
 			if isRegistrationMessage {
-				log.Info().Msg("reaction removed on registration message")
+				log.Info().Msgf("reaction %s removed on registration message", event.Emoji.Name)
 				err := service.DeletePlayer(
 					ctx,
-					g.UserID.String(),
-					g.GuildID.String(),
+					event.UserID.String(),
+					event.GuildID.String(),
 				)
 				if err != nil && !errors.Is(err, domain.ErrPlayerDoesNotExist) {
 					log.Error().Msgf("could not delete player: %s", err)
@@ -52,7 +52,7 @@ func RegisterDiscordHandlers(s *state.State, service domain.Service, lookup doma
 					log.Warn().Msgf("could not delete player: %s", err)
 					return
 				}
-				updateDebtsMessage(ctx, s, d, c, g.GuildID.String())
+				updateDebtsMessage(ctx, s, service, event.GuildID.String())
 			}
 		},
 	)
