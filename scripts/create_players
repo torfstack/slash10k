@@ -1,8 +1,0 @@
-#! /bin/bash
-
-admin_password=$(kubectl get secret slash10k -o jsonpath="{.data.admin-password}" | base64 -d -w 0)
-admin_user="admin"
-basic_auth=$(echo -n "$admin_user:$admin_password" | base64 -w 0)
-
-curl -X POST https://true.torfstack.com/api/admin/player/"$1" -H "Authorization: Basic $basic_auth"
-

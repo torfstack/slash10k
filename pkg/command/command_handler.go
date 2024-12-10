@@ -68,6 +68,22 @@ func RegisterDiscordHandlers(s *state.State, service domain.Service, lookup doma
 		func(event *gateway.InteractionCreateEvent) {
 			ctx := context.Background()
 			switch data := event.Data.(type) {
+			case *discord.ButtonInteraction:
+				if data.CustomID == ComponentIdPaid {
+					log.Info().Msgf("paid button interaction")
+					err := service.ResetDebt(ctx, event.SenderID().String(), event.GuildID.String())
+					if err != nil {
+						log.Error().Msgf("could not reset debt: %s", err)
+						return
+					}
+					updateDebtsMessage(ctx, s, service, event.GuildID.String())
+					err = s.RespondInteraction(
+						event.ID, event.Token, api.InteractionResponse{
+							Type: api.UpdateMessage,
+							Data: nil,
+						},
+					)
+				}
 			case *discord.StringSelectInteraction:
 				if data.CustomID == ComponentIdSelectPlayer {
 					log.Info().Msgf("select player interaction")
@@ -79,31 +95,6 @@ func RegisterDiscordHandlers(s *state.State, service domain.Service, lookup doma
 					err := service.AddDebt(ctx, player, event.GuildID.String(), 10000)
 					if err != nil {
 						log.Error().Msgf("could not add debt: %s", err)
-						return
-					}
-					updateDebtsMessage(ctx, s, service, event.GuildID.String())
-					err = s.RespondInteraction(
-						event.ID, event.Token, api.InteractionResponse{
-							Type: api.UpdateMessage,
-							Data: nil,
-						},
-					)
-				}
-			default:
-				return
-			}
-		},
-	)
-	s.AddHandler(
-		func(event *gateway.InteractionCreateEvent) {
-			ctx := context.Background()
-			switch data := event.Data.(type) {
-			case *discord.ButtonInteraction:
-				if data.CustomID == ComponentIdPaid {
-					log.Info().Msgf("paid button interaction")
-					err := service.ResetDebt(ctx, event.SenderID().String(), event.GuildID.String())
-					if err != nil {
-						log.Error().Msgf("could not reset debt: %s", err)
 						return
 					}
 					updateDebtsMessage(ctx, s, service, event.GuildID.String())
