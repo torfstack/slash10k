@@ -1,0 +1,15 @@
+appName: "slash10k-dev"
+namespace: "default"
+logLevel: "debug"
+
+database:
+  host: "postgresql.default.svc.cluster.local"
+  port: 5432
+  user: "scurvy10k"
+  dbname: "scurvy10kdev"
+
+image:
+  name: ghcr.io/torfstack/slash10k
+  tag: 0.6.0
+
+discordTokenSecretName: "discord-token-dev"

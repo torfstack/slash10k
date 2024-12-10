@@ -1,7 +1,3 @@
--- name: GetDebt :one
-SELECT * FROM debt
-WHERE user_id = $1 LIMIT 1;
-
 -- name: SetDebt :exec
 INSERT INTO debt (amount, user_id)
 VALUES ($1, $2)
@@ -30,36 +26,54 @@ WHERE id = $1;
 SELECT * FROM debt_journal
 WHERE user_id = $1;
 
+-- name: DoesPlayerExist :one
+SELECT EXISTS(SELECT 1 FROM player WHERE discord_id = $1 AND guild_id = $2);
+
 -- name: AddPlayer :one
 INSERT INTO player (
-    name
+    discord_id, discord_name, guild_id, name
 ) VALUES (
-    lower($1)
+    $1, $2, $3, $4
 ) RETURNING *;
+
+-- name: GetPlayer :one
+SELECT sqlc.embed(player), sqlc.embed(debt) FROM player
+JOIN debt ON player.id = debt.user_id
+WHERE player.discord_id = $1 AND player.guild_id = $2 LIMIT 1;
+
+-- name: GetAllPlayers :many
+SELECT sqlc.embed(player), sqlc.embed(debt) FROM player
+JOIN debt ON player.id = debt.user_id
+WHERE player.guild_id = $1;
 
 -- name: DeletePlayer :exec
 DELETE FROM player
-WHERE name = $1;
+WHERE id = $1;
 
 -- name: NumberOfPlayers :one
-SELECT COUNT(*) FROM player;
-
--- name: GetAllDebts :many
-SELECT * FROM player p
-JOIN debt d ON p.id = d.user_id
-ORDER BY d.amount DESC, upper(p.name);
+SELECT COUNT(discord_id) FROM player;
 
 -- name: GetIdOfPlayer :one
 SELECT id FROM player
-WHERE name = lower($1) LIMIT 1;
+WHERE discord_id = $1 AND guild_id = $2 LIMIT 1;
 
 -- name: PutBotSetup :one
 INSERT INTO bot_setup (
-    channel_id, message_id
+    guild_id, channel_id, debts_message_id, registration_message_id
 ) VALUES (
-    $1, $2
+    $1, $2, $3, $4
 ) RETURNING *;
+
+-- name: DeleteBotSetup :exec
+DELETE FROM bot_setup
+WHERE guild_id = $1;
 
 -- name: GetBotSetup :one
 SELECT * FROM bot_setup
-WHERE created_at = (SELECT MAX(created_at) FROM bot_setup) LIMIT 1;
+WHERE created_at = (SELECT MAX(created_at) FROM bot_setup) AND bot_setup.guild_id = $1 LIMIT 1;
+
+-- name: DoesBotSetupExist :one
+SELECT EXISTS(SELECT 1 FROM bot_setup WHERE guild_id = $1);
+
+-- name: GetAllBotSetups :many
+SELECT * FROM bot_setup;

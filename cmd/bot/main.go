@@ -6,8 +6,11 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"os"
-	"slash10k/internal/command"
-	"slash10k/internal/db"
+	"slash10k/pkg/command"
+	"slash10k/pkg/config"
+	"slash10k/pkg/convert/fromdb"
+	"slash10k/pkg/db"
+	"slash10k/pkg/domain"
 	"strings"
 
 	"github.com/diamondburned/arikawa/v3/api"
@@ -26,35 +29,6 @@ var commands = []api.CreateCommandData{
 			},
 		},
 	},
-	{
-		Name: "10k", Description: "Packt 10k in die Gildenbank!", Options: discord.CommandOptions{
-			&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
-			&discord.IntegerOption{OptionName: "amount", Description: "Betrag", Required: true},
-			&discord.StringOption{OptionName: "reason", Description: "Grund", Required: true},
-		},
-	},
-	{
-		Name: "10kpay", Description: "Hat 10k in die Gildenbank gepackt!", Options: discord.CommandOptions{
-			&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
-			&discord.IntegerOption{OptionName: "amount", Description: "Betrag", Required: true},
-		},
-	},
-	{
-		Name: "10kwhy", Description: "Warum 10k? (Historie ist limitiert)", Options: discord.CommandOptions{
-			&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
-		},
-	},
-	{
-		Name: "10kplayeradd", Description: "Füge einen Spieler hinzu.", Options: discord.CommandOptions{
-			&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
-		},
-	},
-	{
-		Name: "10kplayerdel", Description: "Entferne einen Spieler.", Options: discord.CommandOptions{
-			&discord.StringOption{OptionName: "name", Description: "Name des Spielers", Required: true},
-		},
-	},
-	{Name: "10krefresh", Description: "Refresh debts."},
 }
 
 func main() {
@@ -62,26 +36,38 @@ func main() {
 
 	r := cmdroute.NewRouter()
 
-	s := state.New("Bot " + os.Getenv("DISCORD_TOKEN"))
+	token := os.Getenv("DISCORD_TOKEN")
+	if token == "" {
+		log.Fatal().Msg("DISCORD_TOKEN not set")
+	}
+
+	s := state.New("Bot " + token)
 	s.AddInteractionHandler(r)
 	s.AddIntents(gateway.IntentGuilds)
 	s.AddIntents(gateway.IntentMessageContent)
+	s.AddIntents(gateway.IntentGuildMessageReactions)
 
-	err := command.Setup()
+	cfg, err := config.NewConfigFromEnv()
 	if err != nil {
-		log.Fatal().Err(err).Msg("could not setup command")
+		log.Fatal().Err(err).Msg("could not get config from env")
 	}
+	d := db.NewDatabase(cfg.ConnectionString())
 
-	d := db.NewDatabase(db.DefaultConfig().ConnectionString)
-	c := command.NewClient()
+	conn, err := d.Connect(context.Background())
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not connect to database")
+	}
+	botSetups, err := conn.Queries().GetAllBotSetups(context.Background())
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not get bot setups")
+	}
+	messageLookup := domain.NewMessageLookup(fromdb.FromBotSetups(botSetups))
 
-	r.AddFunc("10kup", command.SetChannel(s, d, c))
-	r.AddFunc("10k", command.AddDebt(s, d, c))
-	r.AddFunc("10kpay", command.SubDebt(s, d, c))
-	r.AddFunc("10kwhy", command.GetJournalEntries(c))
-	r.AddFunc("10kplayeradd", command.AddPlayer(s, d, c))
-	r.AddFunc("10kplayerdel", command.DeletePlayer(s, d, c))
-	r.AddFunc("10krefresh", command.RefreshDebts(s, d, c))
+	service := domain.NewSlashTenK(d)
+
+	command.RegisterDiscordHandlers(s, service, messageLookup)
+
+	r.AddFunc("10kup", command.SetChannel(s, service, messageLookup))
 
 	if err := cmdroute.OverwriteCommands(s, commands); err != nil {
 		log.Fatal().Msgf("cannot update commands: %s", err)
