@@ -17,10 +17,15 @@ func SetChannel(state *state.State, service domain.Service, lookup domain.Messag
 	data cmdroute.CommandData,
 ) *api.InteractionResponseData {
 	return func(ctx context.Context, data cmdroute.CommandData) *api.InteractionResponseData {
+		guildId := data.Event.GuildID
+		log.Info().Msgf("setup channel called for guild %s", guildId)
+
 		if data.Event.SenderID() != config.TorfstackUserId() {
 			log.Error().Msgf("cannot set channel: not torfstack, got %v", data.Event.SenderID())
 			return ephemeralMessage("You are not allowed to set the channel, ask Torfstack!")
 		}
+		log.Debug().Msg("called by correct user 'torfstack'")
+
 		options := data.Options
 		var err error
 		cId, err := options.Find("channel_id").SnowflakeValue()
@@ -29,7 +34,6 @@ func SetChannel(state *state.State, service domain.Service, lookup domain.Messag
 			return ephemeralMessage("Could not set channel")
 		}
 
-		guildId := data.Event.GuildID
 		channelId := discord.ChannelID(cId)
 
 		alreadySetup, err := isAlreadySetup(ctx, service, guildId.String())
@@ -38,6 +42,7 @@ func SetChannel(state *state.State, service domain.Service, lookup domain.Messag
 			return ephemeralMessage("Could not check if already setup")
 		}
 		if alreadySetup {
+			log.Debug().Msgf("already setup for guild %s, deleting messages and current setup", guildId)
 			err = deleteMessagesAndCurrentSetup(ctx, state, service, guildId.String())
 			if err != nil {
 				log.Error().Msgf("cannot delete messages and current setup: %s", err)
@@ -51,6 +56,7 @@ func SetChannel(state *state.State, service domain.Service, lookup domain.Messag
 			return ephemeralMessage("Could not send registration message")
 		}
 		registrationMessageId := registrationMessage.ID
+		log.Debug().Msgf("registration message sent with id: %s", registrationMessageId)
 
 		debtsMessage, err := sendDebtsMessage(ctx, state, service, guildId.String(), channelId)
 		if err != nil {
@@ -58,6 +64,7 @@ func SetChannel(state *state.State, service domain.Service, lookup domain.Messag
 			return ephemeralMessage("Could not send debts message")
 		}
 		debtsMessageId := debtsMessage.ID
+		log.Debug().Msgf("debts message sent with id: %s", debtsMessageId)
 
 		err = service.SetBotSetup(
 			ctx,
@@ -153,7 +160,7 @@ func sendDebtsMessage(
 		return nil, errors.New("could not get all players")
 	}
 
-	m, err := s.SendMessage(channelId, "", *transformDebtsToEmbed(allPlayers))
+	m, err := s.SendMessageComplex(channelId, debtsForSendMessage(allPlayers))
 	if err != nil {
 		return nil, errors.New("could not send message")
 	}

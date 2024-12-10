@@ -1,6 +1,6 @@
 appName: "slash10k-dev"
 namespace: "default"
-logLevel: "info"
+logLevel: "debug"
 
 database:
   host: "postgresql.default.svc.cluster.local"
@@ -10,6 +10,6 @@ database:
 
 image:
   name: ghcr.io/torfstack/slash10k
-  tag: 0.5.17
+  tag: 0.6.0
 
 discordTokenSecretName: "discord-token-dev"

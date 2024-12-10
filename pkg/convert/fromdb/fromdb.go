@@ -15,18 +15,18 @@ func FromPlayerWithoutDebt(player sqlc.Player) models.Player {
 	}
 }
 
-func FromPlayerWithDebt(playerWithDebt []sqlc.GetPlayerRow) models.Player {
-	player := FromPlayerWithoutDebt(playerWithDebt[0].Player)
-	player.Debt = FromDebt(playerWithDebt[0].Debt)
+func FromPlayerWithDebt(playerWithDebt sqlc.GetPlayerRow) models.Player {
+	player := FromPlayerWithoutDebt(playerWithDebt.Player)
+	player.Debt = FromDebt(playerWithDebt.Debt)
 	return player
 }
 
 func FromAllPlayers(allPlayers []sqlc.GetAllPlayersRow) []models.Player {
 	players := make([]models.Player, len(allPlayers))
-	for _, player := range allPlayers {
+	for i, player := range allPlayers {
 		p := FromPlayerWithoutDebt(player.Player)
 		p.Debt = FromDebt(player.Debt)
-		players = append(players, p)
+		players[i] = p
 	}
 	return players
 }

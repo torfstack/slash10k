@@ -3,8 +3,6 @@
 build() {
   check_installed "go"
 
-  gen
-  CGO_ENABLED=0 GOOS=linux go build -o bin/slash10k cmd/bot/main.go
   version=$(cat version)
   echo "Building slash10k:$version"
   docker buildx build . -f Dockerfile -t ghcr.io/torfstack/slash10k:"$version"
@@ -12,18 +10,12 @@ build() {
 }
 
 gen() {
-  check_installed "templ"
-
-  echo "Generating templ..."
-  templ generate
   echo "Generating sql..."
   sqlc generate
 }
 
 clean() {
   echo "Cleaning up..."
-  echo "templ/.go"
-  rm templ/*.go &> /dev/null
   echo "bin"
   rm -r bin &> /dev/null
   echo "sqlc"

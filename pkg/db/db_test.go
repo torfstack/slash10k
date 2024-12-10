@@ -41,18 +41,6 @@ func Test_Connection(t *testing.T) {
 			},
 		},
 		{
-			name: "can set debt on player and retrieve it",
-			withConnection: func(t *testing.T, conn db.Connection, ctx context.Context) {
-				p, e := conn.Queries().AddPlayer(ctx, testutil.AddPlayerParams("torfstack"))
-				e = conn.Queries().SetDebt(ctx, testutil.SetDebtParams(p.ID, 30000))
-				e = conn.Queries().SetDebt(ctx, testutil.SetDebtParams(p.ID, 50000))
-				d, e := conn.Queries().GetDebt(ctx, p.ID)
-				if d.Amount != 50000 || e != nil {
-					t.Fatalf("Expected debt of 50000, got %d", d.Amount)
-				}
-			},
-		},
-		{
 			name: "adding debts to multiple players and retrieving",
 			withConnection: func(t *testing.T, conn db.Connection, ctx context.Context) {
 				p1, _ := conn.Queries().AddPlayer(ctx, testutil.AddPlayerParams("torfstack"))
@@ -61,11 +49,11 @@ func Test_Connection(t *testing.T) {
 				_ = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{Amount: 30000, UserID: p1.ID})
 				_ = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{Amount: 50000, UserID: p2.ID})
 				_ = conn.Queries().SetDebt(ctx, sqlc.SetDebtParams{Amount: 80000, UserID: p3.ID})
-				allDebts, _ := conn.Queries().GetAllDebts(ctx, testutil.GetAllDebtsParams())
+				allDebts, _ := conn.Queries().GetAllPlayers(ctx, testutil.GetAllPlayersParams())
 				if len(allDebts) != 3 {
 					t.Fatalf("Expected 3 debts, got %d", len(allDebts))
 				}
-				amounts := []int64{allDebts[0].Amount, allDebts[1].Amount, allDebts[2].Amount}
+				amounts := []int64{allDebts[0].Debt.Amount, allDebts[1].Debt.Amount, allDebts[2].Debt.Amount}
 				if slices.Contains(amounts, int64(30000)) == false ||
 					slices.Contains(amounts, int64(50000)) == false ||
 					slices.Contains(amounts, int64(80000)) == false {
@@ -216,9 +204,7 @@ func Test_Connection(t *testing.T) {
 				if err != nil {
 					t.Fatalf("Could not get connection: %s", err)
 				}
-				defer func(conn db.Connection, ctx context.Context) {
-					_ = conn.Close(ctx)
-				}(conn, context.Background())
+				defer conn.Close(ctx)
 
 				tc.withConnection(t, conn, ctx)
 			},

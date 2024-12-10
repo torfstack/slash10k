@@ -7,7 +7,7 @@ import (
 	sqlc "slash10k/sql/gen"
 )
 
-//go:generate mockgen -destination=../mocks/db_mocks.go -package=mock_db slash10k/internal/db Database,Connection,Queries,Transaction
+//go:generate mockgen -destination=../mocks/db_mocks.go -package=mock_db slash10k/pkg/db Database,Connection,Queries,Transaction
 
 type Database interface {
 	Connect(ctx context.Context) (Connection, error)
@@ -29,7 +29,7 @@ type Queries interface {
 	AddPlayer(ctx context.Context, param sqlc.AddPlayerParams) (sqlc.Player, error)
 	DeletePlayer(ctx context.Context, id int32) error
 	GetIdOfPlayer(ctx context.Context, param sqlc.GetIdOfPlayerParams) (int32, error)
-	GetPlayer(ctx context.Context, params sqlc.GetPlayerParams) ([]sqlc.GetPlayerRow, error)
+	GetPlayer(ctx context.Context, params sqlc.GetPlayerParams) (sqlc.GetPlayerRow, error)
 	GetAllPlayers(ctx context.Context, guildId string) ([]sqlc.GetAllPlayersRow, error)
 	DoesPlayerExist(ctx context.Context, params sqlc.DoesPlayerExistParams) (bool, error)
 

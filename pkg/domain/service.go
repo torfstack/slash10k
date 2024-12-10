@@ -16,8 +16,8 @@ type Service interface {
 	GetAllPlayers(ctx context.Context, guildId string) ([]models.Player, error)
 	GetPlayer(ctx context.Context, discordId string, guildId string) (*models.Player, error)
 
-	AddDebt(ctx context.Context, discordId string, guildId string, amount int64, reason string) error
-	SubDebt(ctx context.Context, discordId string, guildId string, amount int64) error
+	AddDebt(ctx context.Context, discordId string, guildId string, amount int64) error
+	ResetDebt(ctx context.Context, discordId string, guildId string) error
 
 	SetBotSetup(
 		ctx context.Context,
@@ -181,7 +181,7 @@ func (s service) GetPlayer(ctx context.Context, discordId string, guildId string
 	return &res, nil
 }
 
-func (s service) AddDebt(ctx context.Context, discordId string, guildId string, amount int64, reason string) error {
+func (s service) AddDebt(ctx context.Context, discordId string, guildId string, amount int64) error {
 	conn, err := s.db.Connect(ctx)
 	if err != nil {
 		return fmt.Errorf("%w: %s", ErrDatabase, err)
@@ -226,7 +226,7 @@ func (s service) AddDebt(ctx context.Context, discordId string, guildId string, 
 	return nil
 }
 
-func (s service) SubDebt(ctx context.Context, discordId string, guildId string, amount int64) error {
+func (s service) ResetDebt(ctx context.Context, discordId string, guildId string) error {
 	conn, err := s.db.Connect(ctx)
 	if err != nil {
 		return fmt.Errorf("%w: %s", ErrDatabase, err)
@@ -251,14 +251,9 @@ func (s service) SubDebt(ctx context.Context, discordId string, guildId string, 
 	}
 	currentPlayer := fromdb.FromPlayerWithDebt(player)
 
-	newAmount := currentPlayer.Debt.Amount - amount
-	if newAmount < 0 {
-		newAmount = 0
-	}
-
 	err = queries.SetDebt(
 		ctx, sqlc.SetDebtParams{
-			Amount: newAmount,
+			Amount: 0,
 			UserID: currentPlayer.Id,
 		},
 	)

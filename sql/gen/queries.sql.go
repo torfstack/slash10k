@@ -263,10 +263,10 @@ func (q *Queries) GetJournalEntries(ctx context.Context, userID int32) ([]DebtJo
 	return items, nil
 }
 
-const getPlayer = `-- name: GetPlayer :many
+const getPlayer = `-- name: GetPlayer :one
 SELECT player.id, player.discord_id, player.discord_name, player.guild_id, player.name, debt.id, debt.amount, debt.last_updated, debt.user_id FROM player
 JOIN debt ON player.id = debt.user_id
-WHERE player.discord_id = $1 AND player.guild_id = $2
+WHERE player.discord_id = $1 AND player.guild_id = $2 LIMIT 1
 `
 
 type GetPlayerParams struct {
@@ -279,34 +279,21 @@ type GetPlayerRow struct {
 	Debt   Debt
 }
 
-func (q *Queries) GetPlayer(ctx context.Context, arg GetPlayerParams) ([]GetPlayerRow, error) {
-	rows, err := q.db.Query(ctx, getPlayer, arg.DiscordID, arg.GuildID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetPlayerRow
-	for rows.Next() {
-		var i GetPlayerRow
-		if err := rows.Scan(
-			&i.Player.ID,
-			&i.Player.DiscordID,
-			&i.Player.DiscordName,
-			&i.Player.GuildID,
-			&i.Player.Name,
-			&i.Debt.ID,
-			&i.Debt.Amount,
-			&i.Debt.LastUpdated,
-			&i.Debt.UserID,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+func (q *Queries) GetPlayer(ctx context.Context, arg GetPlayerParams) (GetPlayerRow, error) {
+	row := q.db.QueryRow(ctx, getPlayer, arg.DiscordID, arg.GuildID)
+	var i GetPlayerRow
+	err := row.Scan(
+		&i.Player.ID,
+		&i.Player.DiscordID,
+		&i.Player.DiscordName,
+		&i.Player.GuildID,
+		&i.Player.Name,
+		&i.Debt.ID,
+		&i.Debt.Amount,
+		&i.Debt.LastUpdated,
+		&i.Debt.UserID,
+	)
+	return i, err
 }
 
 const numberOfPlayers = `-- name: NumberOfPlayers :one

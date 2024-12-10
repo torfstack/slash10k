@@ -36,15 +36,15 @@ INSERT INTO player (
     $1, $2, $3, $4
 ) RETURNING *;
 
--- name: GetPlayer :many
+-- name: GetPlayer :one
 SELECT sqlc.embed(player), sqlc.embed(debt) FROM player
 JOIN debt ON player.id = debt.user_id
-WHERE player.discord_id = $1 AND player.guild_id = $2;
+WHERE player.discord_id = $1 AND player.guild_id = $2 LIMIT 1;
 
 -- name: GetAllPlayers :many
 SELECT sqlc.embed(player), sqlc.embed(debt) FROM player
 JOIN debt ON player.id = debt.user_id
-WHERE guild_id = $1;
+WHERE player.guild_id = $1;
 
 -- name: DeletePlayer :exec
 DELETE FROM player

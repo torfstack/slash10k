@@ -72,7 +72,7 @@ func GetIdOfPlayerParams(discordId string) sqlc.GetIdOfPlayerParams {
 	}
 }
 
-func GetAllDebtsParams() string {
+func GetAllPlayersParams() string {
 	return TestGuildIdString()
 }
 
