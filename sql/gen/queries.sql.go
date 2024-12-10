@@ -157,16 +157,14 @@ func (q *Queries) GetAllBotSetups(ctx context.Context) ([]BotSetup, error) {
 }
 
 const getAllPlayers = `-- name: GetAllPlayers :many
-SELECT player.id, player.discord_id, player.discord_name, player.guild_id, player.name, debt.id, debt.amount, debt.last_updated, debt.user_id, debt_journal.id, debt_journal.amount, debt_journal.description, debt_journal.date, debt_journal.user_id FROM player
+SELECT player.id, player.discord_id, player.discord_name, player.guild_id, player.name, debt.id, debt.amount, debt.last_updated, debt.user_id FROM player
 JOIN debt ON player.id = debt.user_id
-LEFT JOIN debt_journal ON player.id = debt_journal.user_id
 WHERE guild_id = $1
 `
 
 type GetAllPlayersRow struct {
-	Player      Player
-	Debt        Debt
-	DebtJournal DebtJournal
+	Player Player
+	Debt   Debt
 }
 
 func (q *Queries) GetAllPlayers(ctx context.Context, guildID string) ([]GetAllPlayersRow, error) {
@@ -188,11 +186,6 @@ func (q *Queries) GetAllPlayers(ctx context.Context, guildID string) ([]GetAllPl
 			&i.Debt.Amount,
 			&i.Debt.LastUpdated,
 			&i.Debt.UserID,
-			&i.DebtJournal.ID,
-			&i.DebtJournal.Amount,
-			&i.DebtJournal.Description,
-			&i.DebtJournal.Date,
-			&i.DebtJournal.UserID,
 		); err != nil {
 			return nil, err
 		}
@@ -271,9 +264,8 @@ func (q *Queries) GetJournalEntries(ctx context.Context, userID int32) ([]DebtJo
 }
 
 const getPlayer = `-- name: GetPlayer :many
-SELECT player.id, player.discord_id, player.discord_name, player.guild_id, player.name, debt.id, debt.amount, debt.last_updated, debt.user_id, debt_journal.id, debt_journal.amount, debt_journal.description, debt_journal.date, debt_journal.user_id FROM player
+SELECT player.id, player.discord_id, player.discord_name, player.guild_id, player.name, debt.id, debt.amount, debt.last_updated, debt.user_id FROM player
 JOIN debt ON player.id = debt.user_id
-LEFT JOIN debt_journal ON player.id = debt_journal.user_id
 WHERE player.discord_id = $1 AND player.guild_id = $2
 `
 
@@ -283,9 +275,8 @@ type GetPlayerParams struct {
 }
 
 type GetPlayerRow struct {
-	Player      Player
-	Debt        Debt
-	DebtJournal DebtJournal
+	Player Player
+	Debt   Debt
 }
 
 func (q *Queries) GetPlayer(ctx context.Context, arg GetPlayerParams) ([]GetPlayerRow, error) {
@@ -307,11 +298,6 @@ func (q *Queries) GetPlayer(ctx context.Context, arg GetPlayerParams) ([]GetPlay
 			&i.Debt.Amount,
 			&i.Debt.LastUpdated,
 			&i.Debt.UserID,
-			&i.DebtJournal.ID,
-			&i.DebtJournal.Amount,
-			&i.DebtJournal.Description,
-			&i.DebtJournal.Date,
-			&i.DebtJournal.UserID,
 		); err != nil {
 			return nil, err
 		}

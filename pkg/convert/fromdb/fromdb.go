@@ -18,32 +18,17 @@ func FromPlayerWithoutDebt(player sqlc.Player) models.Player {
 func FromPlayerWithDebt(playerWithDebt []sqlc.GetPlayerRow) models.Player {
 	player := FromPlayerWithoutDebt(playerWithDebt[0].Player)
 	player.Debt = FromDebt(playerWithDebt[0].Debt)
-	player.DebtJournal = make([]models.DebtJournalEntry, len(playerWithDebt))
-	for i, row := range playerWithDebt {
-		player.DebtJournal[i] = FromDebtJournal(row.DebtJournal)
-	}
 	return player
 }
 
 func FromAllPlayers(allPlayers []sqlc.GetAllPlayersRow) []models.Player {
-	players := make(map[string]models.Player, len(allPlayers))
-	for _, row := range allPlayers {
-		p, ok := players[row.Player.DiscordID]
-		if !ok {
-			p = FromPlayerWithoutDebt(row.Player)
-			p.Debt = FromDebt(row.Debt)
-			p.DebtJournal = make([]models.DebtJournalEntry, 10)
-			p.DebtJournal[0] = FromDebtJournal(row.DebtJournal)
-			players[row.Player.DiscordID] = p
-		} else {
-			p.DebtJournal = append(p.DebtJournal, FromDebtJournal(row.DebtJournal))
-		}
+	players := make([]models.Player, len(allPlayers))
+	for _, player := range allPlayers {
+		p := FromPlayerWithoutDebt(player.Player)
+		p.Debt = FromDebt(player.Debt)
+		players = append(players, p)
 	}
-	res := make([]models.Player, len(players))
-	for _, player := range players {
-		res = append(res, player)
-	}
-	return res
+	return players
 }
 
 func FromDebt(debt sqlc.Debt) models.Debt {

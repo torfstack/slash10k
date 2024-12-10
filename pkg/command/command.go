@@ -70,7 +70,7 @@ func transformDebtsToEmbed(players []models.Player) *discord.Embed {
 		debtString := strings.Builder{}
 		debtString.WriteString("```")
 		for _, p := range players {
-			debtString.WriteString(fmt.Sprintf("%-*s %v\n", maxLength, p.DiscordName, p.Debt.Amount))
+			debtString.WriteString(fmt.Sprintf("%-*s %v\n", maxLength, p.Name, p.Debt.Amount))
 		}
 		debtString.WriteString("```")
 		embed.Fields = []discord.EmbedField{
