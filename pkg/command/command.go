@@ -158,9 +158,5 @@ func defaultEmbed() discord.Embed {
 		Description: "[GitHub](https://github.com/torfstack/slash10k) | v" + version,
 		Timestamp:   discord.NowTimestamp(),
 		Color:       discord.Color(0xF1C40F),
-		Footer: &discord.EmbedFooter{
-			Text: "/10k <Spieler> <Betrag>",
-			Icon: "https://true.torfstack.com/coin.png",
-		},
 	}
 }
