@@ -1,5 +1,20 @@
 package models
 
+import (
+	"sort"
+	"strings"
+)
+
+type Players []Player
+
+func (p Players) SortByName() {
+	sort.Slice(
+		p, func(i, j int) bool {
+			return strings.Compare(p[i].Name, p[j].Name) < 0
+		},
+	)
+}
+
 type Player struct {
 	Id          int32
 	DiscordId   string

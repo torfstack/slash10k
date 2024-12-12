@@ -12,7 +12,6 @@ import (
 	"slash10k/pkg/domain"
 	"slash10k/pkg/models"
 	"slices"
-	"sort"
 	"strings"
 	_ "time/tzdata"
 )
@@ -86,10 +85,12 @@ func debtsForEditMessage(allPlayers []models.Player) api.EditMessageData {
 	}
 }
 
-func debtsMessageButtonComponents(allPlayers []models.Player) discord.ContainerComponents {
+func debtsMessageButtonComponents(allPlayers models.Players) discord.ContainerComponents {
 	if len(allPlayers) == 0 {
 		return make(discord.ContainerComponents, 0)
 	}
+
+	allPlayers.SortByName()
 	playerNames := make([]discord.SelectOption, len(allPlayers))
 	for i, p := range allPlayers {
 		playerNames[i] = discord.SelectOption{
@@ -97,11 +98,6 @@ func debtsMessageButtonComponents(allPlayers []models.Player) discord.ContainerC
 			Value: p.DiscordId,
 		}
 	}
-	sort.Slice(
-		playerNames, func(i, j int) bool {
-			return strings.Compare(playerNames[i].Label, playerNames[j].Label) < 0
-		},
-	)
 	return discord.ContainerComponents{
 		&discord.ActionRowComponent{
 			&discord.StringSelectComponent{
@@ -120,10 +116,11 @@ func debtsMessageButtonComponents(allPlayers []models.Player) discord.ContainerC
 	}
 }
 
-func transformDebtsToEmbed(players []models.Player) discord.Embed {
+func transformDebtsToEmbed(players models.Players) discord.Embed {
 	embed := defaultEmbed()
 
 	if len(players) > 0 {
+		players.SortByName()
 		maxLength := len(
 			slices.MaxFunc(
 				players, func(p1, p2 models.Player) int {

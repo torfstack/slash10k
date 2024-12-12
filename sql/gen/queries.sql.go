@@ -159,7 +159,7 @@ func (q *Queries) GetAllBotSetups(ctx context.Context) ([]BotSetup, error) {
 const getAllPlayers = `-- name: GetAllPlayers :many
 SELECT player.id, player.discord_id, player.discord_name, player.guild_id, player.name, debt.id, debt.amount, debt.last_updated, debt.user_id FROM player
 JOIN debt ON player.id = debt.user_id
-WHERE guild_id = $1
+WHERE player.guild_id = $1
 `
 
 type GetAllPlayersRow struct {
@@ -199,7 +199,7 @@ func (q *Queries) GetAllPlayers(ctx context.Context, guildID string) ([]GetAllPl
 
 const getBotSetup = `-- name: GetBotSetup :one
 SELECT guild_id, channel_id, registration_message_id, debts_message_id, created_at FROM bot_setup
-WHERE created_at = (SELECT MAX(created_at) FROM bot_setup) AND bot_setup.guild_id = $1 LIMIT 1
+WHERE bot_setup.guild_id = $1 LIMIT 1
 `
 
 func (q *Queries) GetBotSetup(ctx context.Context, guildID string) (BotSetup, error) {
