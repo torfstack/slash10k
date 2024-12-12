@@ -43,8 +43,6 @@ func main() {
 
 	s := state.New("Bot " + token)
 	s.AddInteractionHandler(r)
-	s.AddIntents(gateway.IntentGuilds)
-	s.AddIntents(gateway.IntentMessageContent)
 	s.AddIntents(gateway.IntentGuildMessageReactions)
 
 	cfg, err := config.NewConfigFromEnv()
