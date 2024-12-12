@@ -141,7 +141,7 @@ func sendRegistrationMessage(
 	s *state.State,
 	channelId discord.ChannelID,
 ) (*discord.Message, error) {
-	m, err := s.SendMessage(channelId, "Hier mal Emoji drauf!")
+	m, err := s.SendMessage(channelId, ":moneybag: react to join!")
 	if err != nil {
 		return nil, errors.New("could not send message")
 	}

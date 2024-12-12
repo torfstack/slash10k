@@ -42,6 +42,8 @@ spec:
                 secretKeyRef:
                   name: slash10k
                   key: {{ .Values.discordTokenSecretName }}
+            - name: APPLICATION_ID
+              value: {{ .Values.applicationId | quote }}
             - name: VERSION
               value: {{ .Values.image.tag }}
       imagePullSecrets:

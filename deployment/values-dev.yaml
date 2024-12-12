@@ -10,6 +10,7 @@ database:
 
 image:
   name: ghcr.io/torfstack/slash10k
-  tag: 0.6.1
+  tag: 0.7.3
 
 discordTokenSecretName: "discord-token-dev"
+applicationId: "1315305037458702356"

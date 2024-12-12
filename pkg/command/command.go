@@ -73,12 +73,12 @@ func debtsForSendMessage(allPlayers []models.Player) api.SendMessageData {
 	return api.SendMessageData{
 		Content:    "",
 		Embeds:     []discord.Embed{transformDebtsToEmbed(allPlayers)},
-		Components: buttonComponents(allPlayers),
+		Components: debtsMessageButtonComponents(allPlayers),
 	}
 }
 
 func debtsForEditMessage(allPlayers []models.Player) api.EditMessageData {
-	buttons := buttonComponents(allPlayers)
+	buttons := debtsMessageButtonComponents(allPlayers)
 	return api.EditMessageData{
 		Content:    option.NewNullableString(""),
 		Embeds:     &[]discord.Embed{transformDebtsToEmbed(allPlayers)},
@@ -86,7 +86,7 @@ func debtsForEditMessage(allPlayers []models.Player) api.EditMessageData {
 	}
 }
 
-func buttonComponents(allPlayers []models.Player) discord.ContainerComponents {
+func debtsMessageButtonComponents(allPlayers []models.Player) discord.ContainerComponents {
 	if len(allPlayers) == 0 {
 		return make(discord.ContainerComponents, 0)
 	}

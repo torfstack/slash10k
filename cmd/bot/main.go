@@ -51,6 +51,10 @@ func main() {
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not get config from env")
 	}
+	err = db.Migrate(context.Background(), cfg.ConnectionString())
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not migrate database")
+	}
 	d := db.NewDatabase(cfg.ConnectionString())
 
 	conn, err := d.Connect(context.Background())

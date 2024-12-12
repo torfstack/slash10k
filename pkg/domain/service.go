@@ -308,6 +308,11 @@ func (s service) SetBotSetup(
 		return fmt.Errorf("%w: %s", ErrDatabase, err)
 	}
 
+	err = tx.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("%w: %s", ErrDatabase, err)
+	}
+
 	return nil
 }
 

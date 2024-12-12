@@ -17,6 +17,7 @@ FROM alpine:3.21.0
 RUN mkdir /opt/slash10k
 WORKDIR /opt/slash10k
 
+COPY sql sql
 COPY --from=builder /opt/slash10k/bin/slash10k slash10k
 
 CMD ["./slash10k"]

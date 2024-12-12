@@ -3,12 +3,21 @@ package command
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
+	"github.com/diamondburned/arikawa/v3/utils/json/option"
+	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
+	"os"
 	"slash10k/pkg/domain"
+	"strings"
+)
+
+var (
+	tokenUuidMap = make(map[string]string)
 )
 
 func RegisterDiscordHandlers(s *state.State, service domain.Service, lookup domain.MessageLookup) {
@@ -69,7 +78,8 @@ func RegisterDiscordHandlers(s *state.State, service domain.Service, lookup doma
 			ctx := context.Background()
 			switch data := event.Data.(type) {
 			case *discord.ButtonInteraction:
-				if data.CustomID == ComponentIdPaid {
+				switch {
+				case data.CustomID == ComponentIdPaid:
 					log.Info().Msgf("paid button interaction")
 					err := service.ResetDebt(ctx, event.SenderID().String(), event.GuildID.String())
 					if err != nil {
@@ -77,12 +87,47 @@ func RegisterDiscordHandlers(s *state.State, service domain.Service, lookup doma
 						return
 					}
 					updateDebtsMessage(ctx, s, service, event.GuildID.String())
-					err = s.RespondInteraction(
-						event.ID, event.Token, api.InteractionResponse{
-							Type: api.UpdateMessage,
-							Data: nil,
-						},
-					)
+				case strings.HasPrefix(string(data.CustomID), ComponentIdCancelButton):
+					appIdSnowflake, err := discord.ParseSnowflake(os.Getenv("APPLICATION_ID"))
+					if err != nil {
+						log.Error().Msgf("could not parse application id: %s", err)
+						return
+					}
+					updateDebtsMessage(ctx, s, service, event.GuildID.String())
+					_, originalToken := extractPlayerAndToken(string(data.CustomID))
+					err = s.DeleteInteractionResponse(discord.AppID(appIdSnowflake), originalToken)
+					if err != nil {
+						log.Error().Msgf("could not delete interaction response: %s", err)
+						return
+					}
+				case strings.HasPrefix(string(data.CustomID), ComponentIdConfirmButton):
+					player, originalToken := extractPlayerAndToken(string(data.CustomID))
+					err := service.AddDebt(ctx, player, event.GuildID.String(), 10000)
+					if err != nil {
+						log.Error().Msgf("could not add debt: %s", err)
+						return
+					}
+					updateDebtsMessage(ctx, s, service, event.GuildID.String())
+					appIdSnowflake, err := discord.ParseSnowflake(os.Getenv("APPLICATION_ID"))
+					if err != nil {
+						log.Error().Msgf("could not parse application id: %s", err)
+						return
+					}
+					err = s.DeleteInteractionResponse(discord.AppID(appIdSnowflake), originalToken)
+					if err != nil {
+						log.Error().Msgf("could not delete interaction response: %s", err)
+						return
+					}
+				}
+				err := s.RespondInteraction(
+					event.ID, event.Token, api.InteractionResponse{
+						Type: api.DeferredMessageUpdate,
+						Data: nil,
+					},
+				)
+				if err != nil {
+					log.Error().Msgf("could not respond to interaction: %s", err)
+					return
 				}
 			case *discord.StringSelectInteraction:
 				if data.CustomID == ComponentIdSelectPlayer {
@@ -91,23 +136,62 @@ func RegisterDiscordHandlers(s *state.State, service domain.Service, lookup doma
 						log.Error().Msgf("invalid number of players selected: %v", len(data.Values))
 						return
 					}
-					player := data.Values[0]
-					err := service.AddDebt(ctx, player, event.GuildID.String(), 10000)
+					player, err := service.GetPlayer(ctx, data.Values[0], event.GuildID.String())
 					if err != nil {
-						log.Error().Msgf("could not add debt: %s", err)
+						log.Error().Msgf("could not get player: %s", err)
 						return
 					}
-					updateDebtsMessage(ctx, s, service, event.GuildID.String())
+					u := uuid.NewString()
+					tokenUuidMap[u] = event.Token
 					err = s.RespondInteraction(
 						event.ID, event.Token, api.InteractionResponse{
-							Type: api.UpdateMessage,
-							Data: nil,
+							Type: api.MessageInteractionWithSource,
+							Data: &api.InteractionResponseData{
+								Content:    option.NewNullableString("Do you really want to add 10k to " + player.Name + "?"),
+								Components: confirmOrCancelButtonComponents(player.DiscordId, u),
+								Flags:      discord.EphemeralMessage,
+							},
 						},
 					)
+					if err != nil {
+						log.Error().Msgf("could not respond to interaction: %s", err)
+						return
+					}
 				}
 			default:
 				return
 			}
 		},
 	)
+}
+
+const (
+	ComponentIdCancelButton     = "CANCEL"
+	ComponentLabelCancelButton  = "Cancel"
+	ComponentIdConfirmButton    = "CONFIRM"
+	ComponentLabelConfirmButton = "Confirm"
+)
+
+func confirmOrCancelButtonComponents(player string, token string) *discord.ContainerComponents {
+	return &discord.ContainerComponents{
+		&discord.ActionRowComponent{
+			&discord.ButtonComponent{
+				Style:    discord.SecondaryButtonStyle(),
+				CustomID: discord.ComponentID(fmt.Sprintf("%s||%s||%s", ComponentIdCancelButton, player, token)),
+				Label:    ComponentLabelCancelButton,
+			},
+			&discord.ButtonComponent{
+				Style:    discord.DangerButtonStyle(),
+				CustomID: discord.ComponentID(fmt.Sprintf("%s||%s||%s", ComponentIdConfirmButton, player, token)),
+				Label:    ComponentLabelConfirmButton,
+			},
+		},
+	}
+}
+
+func extractPlayerAndToken(customId string) (string, string) {
+	playerAndToken := strings.TrimPrefix(customId, ComponentIdCancelButton+"||")
+	playerAndToken = strings.TrimPrefix(playerAndToken, ComponentIdConfirmButton+"||")
+	components := strings.Split(playerAndToken, "||")
+	return components[0], tokenUuidMap[components[1]]
 }
