@@ -32,11 +32,6 @@ spec:
                 secretKeyRef:
                   name: slash10k
                   key: db-password
-            - name: ADMIN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: slash10k
-                  key: admin-password
             - name: DISCORD_TOKEN
               valueFrom:
                 secretKeyRef:
