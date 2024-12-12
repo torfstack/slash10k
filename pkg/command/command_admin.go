@@ -3,6 +3,7 @@ package command
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/api/cmdroute"
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -10,6 +11,10 @@ import (
 	"github.com/rs/zerolog/log"
 	"slash10k/pkg/config"
 	"slash10k/pkg/domain"
+)
+
+const (
+	DeleteMessageReason = "bot_setup"
 )
 
 func SetChannel(state *state.State, service domain.Service, lookup domain.MessageLookup) func(
@@ -106,19 +111,23 @@ func deleteMessagesAndCurrentSetup(ctx context.Context, s *state.State, service 
 	if err != nil {
 		return errors.New("could not parse registration message id")
 	}
-	err = s.MessageRemove(
+	// There is s.DeleteMessages, but it does not delete message older than 2 weeks
+	// and requires an additional permission (MANAGE_MESSAGES).
+	err = s.DeleteMessage(
 		discord.ChannelID(channelId),
 		discord.MessageID(debtsMessageId),
+		DeleteMessageReason,
 	)
 	if err != nil {
-		return errors.New("could not delete debts message")
+		return fmt.Errorf("could not delete debts message: %s", err)
 	}
-	err = s.MessageRemove(
+	err = s.DeleteMessage(
 		discord.ChannelID(channelId),
 		discord.MessageID(registrationMessageId),
+		DeleteMessageReason,
 	)
 	if err != nil {
-		return errors.New("could not delete registration message")
+		return fmt.Errorf("could not delete registration message: %s", err)
 	}
 	return service.DeleteBotSetup(ctx, guildId)
 }
