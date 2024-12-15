@@ -13,11 +13,12 @@ import (
 	"github.com/rs/zerolog/log"
 	"os"
 	"slash10k/pkg/domain"
+	"slash10k/pkg/utils"
 	"strings"
 )
 
 var (
-	tokenUuidMap = make(map[string]string)
+	tokenUuidMap = utils.SyncMap[string, string]{}
 )
 
 func RegisterDiscordHandlers(s *state.State, service domain.Service, lookup domain.MessageLookup) {
@@ -94,15 +95,23 @@ func RegisterDiscordHandlers(s *state.State, service domain.Service, lookup doma
 						return
 					}
 					updateDebtsMessage(ctx, s, service, event.GuildID.String())
-					_, originalToken := extractPlayerAndToken(string(data.CustomID))
+					_, originalToken, err := extractPlayerAndToken(string(data.CustomID))
+					if err != nil {
+						log.Error().Msgf("could not extract player and token: %s", err)
+						return
+					}
 					err = s.DeleteInteractionResponse(discord.AppID(appIdSnowflake), originalToken)
 					if err != nil {
 						log.Error().Msgf("could not delete interaction response: %s", err)
 						return
 					}
 				case strings.HasPrefix(string(data.CustomID), ComponentIdConfirmButton):
-					player, originalToken := extractPlayerAndToken(string(data.CustomID))
-					err := service.AddDebt(ctx, player, event.GuildID.String(), 10000)
+					player, originalToken, err := extractPlayerAndToken(string(data.CustomID))
+					if err != nil {
+						log.Error().Msgf("could not extract player and token: %s", err)
+						return
+					}
+					err = service.AddDebt(ctx, player, event.GuildID.String(), 10000)
 					if err != nil {
 						log.Error().Msgf("could not add debt: %s", err)
 						return
@@ -142,7 +151,7 @@ func RegisterDiscordHandlers(s *state.State, service domain.Service, lookup doma
 						return
 					}
 					u := uuid.NewString()
-					tokenUuidMap[u] = event.Token
+					tokenUuidMap.Store(u, event.Token)
 					err = s.RespondInteraction(
 						event.ID, event.Token, api.InteractionResponse{
 							Type: api.MessageInteractionWithSource,
@@ -189,9 +198,13 @@ func confirmOrCancelButtonComponents(player string, token string) *discord.Conta
 	}
 }
 
-func extractPlayerAndToken(customId string) (string, string) {
+func extractPlayerAndToken(customId string) (string, string, error) {
 	playerAndToken := strings.TrimPrefix(customId, ComponentIdCancelButton+"||")
 	playerAndToken = strings.TrimPrefix(playerAndToken, ComponentIdConfirmButton+"||")
 	components := strings.Split(playerAndToken, "||")
-	return components[0], tokenUuidMap[components[1]]
+	token, ok := tokenUuidMap.LoadAndRemove(components[1])
+	if !ok {
+		return "", "", errors.New("could not load token")
+	}
+	return components[0], token, nil
 }
