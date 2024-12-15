@@ -1,6 +1,9 @@
 package domain
 
-import "slash10k/pkg/models"
+import (
+	"slash10k/pkg/models"
+	"slash10k/pkg/utils"
+)
 
 type MessageLookup interface {
 	IsRegistrationMessage(messageId string) bool
@@ -8,7 +11,7 @@ type MessageLookup interface {
 }
 
 type messageLookup struct {
-	table map[string]any
+	set utils.SyncSet[string]
 }
 
 var _ MessageLookup = (*messageLookup)(nil)
@@ -16,19 +19,17 @@ var _ MessageLookup = (*messageLookup)(nil)
 func NewMessageLookup(
 	botSetups []models.BotSetup,
 ) *messageLookup {
-	m := messageLookup{}
-	m.table = make(map[string]any)
+	m := messageLookup{set: utils.NewSyncSet[string]()}
 	for _, botSetup := range botSetups {
-		m.table[botSetup.RegistrationMessageId] = struct{}{}
+		m.set.Add(botSetup.RegistrationMessageId)
 	}
 	return &m
 }
 
 func (m *messageLookup) IsRegistrationMessage(messageId string) bool {
-	_, ok := m.table[messageId]
-	return ok
+	return m.set.Contains(messageId)
 }
 
 func (m *messageLookup) AddSetup(botSetup models.BotSetup) {
-	m.table[botSetup.RegistrationMessageId] = struct{}{}
+	m.set.Add(botSetup.RegistrationMessageId)
 }
