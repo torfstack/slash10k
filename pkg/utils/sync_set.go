@@ -1,22 +1,21 @@
 package utils
 
 type SyncSet[T comparable] struct {
-	m map[T]struct{}
+	m SyncMap[T, struct{}]
 }
 
 func NewSyncSet[T comparable]() SyncSet[T] {
-	return SyncSet[T]{m: make(map[T]struct{})}
+	return SyncSet[T]{m: SyncMap[T, struct{}]{}}
 }
 
 func (s *SyncSet[T]) Add(value T) {
-	s.m[value] = struct{}{}
+	s.m.Store(value, struct{}{})
 }
 
 func (s *SyncSet[T]) Remove(value T) {
-	delete(s.m, value)
+	s.m.Remove(value)
 }
 
 func (s *SyncSet[T]) Contains(value T) bool {
-	_, ok := s.m[value]
-	return ok
+	return s.m.Contains(value)
 }
