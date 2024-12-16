@@ -13,10 +13,19 @@ func (s *SyncMap[K, V]) LoadAndRemove(key K) (value V, ok bool) {
 	}
 
 	value, ok = v.(V)
-	s.m.Delete(key)
+	s.Remove(key)
 	return
+}
+
+func (s *SyncMap[K, V]) Remove(key K) {
+	s.m.Delete(key)
 }
 
 func (s *SyncMap[K, V]) Store(key K, value V) {
 	s.m.Store(key, value)
+}
+
+func (s *SyncMap[K, V]) Contains(key K) bool {
+	_, ok := s.m.Load(key)
+	return ok
 }
