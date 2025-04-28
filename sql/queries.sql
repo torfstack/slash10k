@@ -77,3 +77,7 @@ SELECT EXISTS(SELECT 1 FROM bot_setup WHERE guild_id = $1);
 
 -- name: GetAllBotSetups :many
 SELECT * FROM bot_setup;
+
+-- name: InsertOutboxEvent :exec
+INSERT INTO outbox (event_type, payload)
+VALUES ($1, $2);
