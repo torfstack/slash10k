@@ -12,6 +12,7 @@ import (
 	"slash10k/pkg/db"
 	"slash10k/pkg/domain"
 	"strings"
+	"time"
 
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/api/cmdroute"
@@ -70,6 +71,20 @@ func main() {
 	command.RegisterDiscordHandlers(s, service, messageLookup)
 
 	r.AddFunc("10kup", command.SetChannel(s, service, messageLookup))
+
+	go func() {
+		for {
+			err := db.ProcessOutbox(context.Background(), d, func(eventType string, payload map[string]interface{}) error {
+				log.Info().Msgf("Processing event: %s with payload: %v", eventType, payload)
+				// Add logic to handle specific event types, e.g., sending messages
+				return nil
+			})
+			if err != nil {
+				log.Error().Err(err).Msg("Error processing outbox")
+			}
+			time.Sleep(10 * time.Second) // Adjust interval as needed
+		}
+	}()
 
 	if err := cmdroute.OverwriteCommands(s, commands); err != nil {
 		log.Fatal().Msgf("cannot update commands: %s", err)

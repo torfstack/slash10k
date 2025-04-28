@@ -34,6 +34,14 @@ CREATE TABLE bot_setup
     created_at TIMESTAMP NOT NULL DEFAULT now()
 );
 
+CREATE TABLE outbox (
+    id SERIAL PRIMARY KEY,
+    event_type TEXT NOT NULL,
+    payload JSONB NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT now(),
+    processed_at TIMESTAMP
+);
+
 CREATE OR REPLACE FUNCTION check_number_of_journal_rows()
 RETURNS TRIGGER AS 
 $$

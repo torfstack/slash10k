@@ -218,6 +218,16 @@ func (s service) AddDebt(ctx context.Context, discordId string, guildId string, 
 		return fmt.Errorf("%w: %s", ErrDatabase, err)
 	}
 
+	eventPayload := map[string]interface{}{
+		"guild_id": guildId,
+		"user_id":  currentPlayer.Id,
+		"new_amount": newAmount,
+	}
+	err = queries.InsertOutboxEvent(ctx, "DebtUpdated", eventPayload)
+	if err != nil {
+		return fmt.Errorf("%w: %s", ErrDatabase, err)
+	}
+
 	err = tx.Commit(ctx)
 	if err != nil {
 		return fmt.Errorf("%w: %s", ErrDatabase, err)
