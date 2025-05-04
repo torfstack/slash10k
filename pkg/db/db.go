@@ -3,8 +3,10 @@ package db
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5"
+
 	sqlc "slash10k/sql/gen"
+
+	"github.com/jackc/pgx/v5"
 )
 
 //go:generate mockgen -destination=../mocks/db_mocks.go -package=mock_db slash10k/pkg/db Database,Connection,Queries,Transaction
@@ -24,6 +26,9 @@ type Transaction interface {
 	Queries() Queries
 }
 
+type Commands interface {
+}
+
 type Queries interface {
 	NumberOfPlayers(ctx context.Context) (int64, error)
 	AddPlayer(ctx context.Context, param sqlc.AddPlayerParams) (sqlc.Player, error)
@@ -34,11 +39,6 @@ type Queries interface {
 	DoesPlayerExist(ctx context.Context, params sqlc.DoesPlayerExistParams) (bool, error)
 
 	SetDebt(ctx context.Context, params sqlc.SetDebtParams) error
-
-	AddJournalEntry(ctx context.Context, params sqlc.AddJournalEntryParams) (sqlc.DebtJournal, error)
-	GetJournalEntries(ctx context.Context, params int32) ([]sqlc.DebtJournal, error)
-	UpdateJournalEntry(ctx context.Context, params sqlc.UpdateJournalEntryParams) (sqlc.DebtJournal, error)
-	DeleteJournalEntry(ctx context.Context, id int32) error
 
 	GetBotSetup(ctx context.Context, guildId string) (sqlc.BotSetup, error)
 	DoesBotSetupExist(ctx context.Context, guildId string) (bool, error)

@@ -2,16 +2,17 @@ package db_test
 
 import (
 	"context"
-	"fmt"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/modules/postgres"
-	"github.com/testcontainers/testcontainers-go/wait"
-	"slash10k/pkg/db"
-	"slash10k/pkg/testutil"
-	sqlc "slash10k/sql/gen"
 	"slices"
 	"testing"
 	"time"
+
+	"slash10k/pkg/db"
+	"slash10k/pkg/testutil"
+	sqlc "slash10k/sql/gen"
+
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/modules/postgres"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 func Test_Connection(t *testing.T) {
@@ -91,62 +92,6 @@ func Test_Connection(t *testing.T) {
 						botSetup.DebtsMessageID,
 						botSetup.RegistrationMessageID,
 					)
-				}
-			},
-		},
-		{
-			name: "add more than 10 journal entries and retrieve them",
-			withConnection: func(t *testing.T, conn db.Connection, ctx context.Context) {
-				p, _ := conn.Queries().AddPlayer(ctx, testutil.AddPlayerParams("torfstack"))
-				for i := range 5 {
-					_, _ = conn.Queries().AddJournalEntry(
-						ctx, sqlc.AddJournalEntryParams{
-							Amount:      int64(i * 10000),
-							Description: fmt.Sprintf("added %v", i*10000),
-							UserID:      p.ID,
-						},
-					)
-				}
-				entries, _ := conn.Queries().GetJournalEntries(ctx, p.ID)
-				if len(entries) != 5 {
-					t.Fatalf("Expected 5 journal entries, got %d", len(entries))
-				}
-				for i := range 6 {
-					_, _ = conn.Queries().AddJournalEntry(
-						ctx, sqlc.AddJournalEntryParams{
-							Amount:      int64(i * 10000),
-							Description: fmt.Sprintf("added %v", i*10000),
-							UserID:      p.ID,
-						},
-					)
-				}
-				entries2, _ := conn.Queries().GetJournalEntries(ctx, p.ID)
-				if len(entries2) > 10 {
-					t.Fatalf("Expected 10 journal entries, got %d", len(entries))
-				}
-			},
-		},
-		{
-			name: "update journal entry and retrieve it",
-			withConnection: func(t *testing.T, conn db.Connection, ctx context.Context) {
-				p, _ := conn.Queries().AddPlayer(ctx, testutil.AddPlayerParams("torfstack"))
-				j, _ := conn.Queries().AddJournalEntry(
-					ctx, sqlc.AddJournalEntryParams{
-						Amount:      int64(10000),
-						Description: fmt.Sprintf("added %v", 10000),
-						UserID:      p.ID,
-					},
-				)
-				_, _ = conn.Queries().UpdateJournalEntry(
-					ctx, sqlc.UpdateJournalEntryParams{
-						Amount:      int64(25000),
-						Description: fmt.Sprintf("added %v", 25000),
-						ID:          j.ID,
-					},
-				)
-				entries, _ := conn.Queries().GetJournalEntries(ctx, p.ID)
-				if len(entries) != 1 || entries[0].Amount != 25000 {
-					t.Fatalf("Expected journal entry to be 25000, got %d", entries[0].Amount)
 				}
 			},
 		},
