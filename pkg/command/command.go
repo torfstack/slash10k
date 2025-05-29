@@ -3,17 +3,19 @@ package command
 import (
 	"context"
 	"fmt"
+	"os"
+	"slices"
+	"strings"
+	_ "time/tzdata"
+
+	"slash10k/pkg/domain"
+	"slash10k/pkg/models"
+
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/diamondburned/arikawa/v3/utils/json/option"
 	"github.com/rs/zerolog/log"
-	"os"
-	"slash10k/pkg/domain"
-	"slash10k/pkg/models"
-	"slices"
-	"strings"
-	_ "time/tzdata"
 )
 
 const (

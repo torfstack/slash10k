@@ -4,13 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"slash10k/pkg/config"
+	"slash10k/pkg/domain"
+
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/api/cmdroute"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/rs/zerolog/log"
-	"slash10k/pkg/config"
-	"slash10k/pkg/domain"
 )
 
 const (

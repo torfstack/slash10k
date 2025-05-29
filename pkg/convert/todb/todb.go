@@ -1,10 +1,12 @@
 package todb
 
 import (
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
+
 	"slash10k/pkg/models"
 	sqlc "slash10k/sql/gen"
-	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func ToPlayer(player models.Player) sqlc.Player {

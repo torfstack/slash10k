@@ -3,15 +3,17 @@ package db_test
 import (
 	"context"
 	"fmt"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/modules/postgres"
-	"github.com/testcontainers/testcontainers-go/wait"
-	"slash10k/pkg/db"
-	"slash10k/pkg/testutil"
-	sqlc "slash10k/sql/gen"
 	"slices"
 	"testing"
 	"time"
+
+	"slash10k/pkg/db"
+	"slash10k/pkg/testutil"
+	sqlc "slash10k/sql/gen"
+
+	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/modules/postgres"
+	"github.com/testcontainers/testcontainers-go/wait"
 )
 
 func Test_Connection(t *testing.T) {

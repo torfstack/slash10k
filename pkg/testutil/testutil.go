@@ -1,12 +1,14 @@
 package testutil
 
 import (
-	"go.uber.org/mock/gomock"
+	"testing"
+
 	"slash10k/pkg/config"
 	"slash10k/pkg/db"
 	mockdb "slash10k/pkg/mocks"
 	sqlc "slash10k/sql/gen"
-	"testing"
+
+	"go.uber.org/mock/gomock"
 )
 
 func QueriesMock(c *gomock.Controller) (db.Database, *mockdb.MockQueries) {

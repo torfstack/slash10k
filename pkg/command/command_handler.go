@@ -4,6 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
+
+	"slash10k/pkg/domain"
+	"slash10k/pkg/utils"
+
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
@@ -11,10 +17,6 @@ import (
 	"github.com/diamondburned/arikawa/v3/utils/json/option"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
-	"os"
-	"slash10k/pkg/domain"
-	"slash10k/pkg/utils"
-	"strings"
 )
 
 var (

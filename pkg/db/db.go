@@ -3,8 +3,10 @@ package db
 import (
 	"context"
 	"fmt"
-	"github.com/jackc/pgx/v5"
+
 	sqlc "slash10k/sql/gen"
+
+	"github.com/jackc/pgx/v5"
 )
 
 //go:generate mockgen -destination=../mocks/db_mocks.go -package=mock_db slash10k/pkg/db Database,Connection,Queries,Transaction

@@ -1,12 +1,14 @@
 package fromdb
 
 import (
-	"github.com/jackc/pgx/v5/pgtype"
 	"reflect"
-	"slash10k/pkg/models"
-	sqlc "slash10k/sql/gen"
 	"testing"
 	"time"
+
+	"slash10k/pkg/models"
+	sqlc "slash10k/sql/gen"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func TestFromAllPlayers(t *testing.T) {
